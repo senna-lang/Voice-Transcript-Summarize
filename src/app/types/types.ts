@@ -1,8 +1,9 @@
-type Text = {
+import { Timestamp } from "firebase/firestore";
+
+type TextMeta = {
   id: string;
-  summary: string;
-  vanilla: string;
-  createdAt: string;
+  name:string;
+  createdAt: Timestamp;
 };
 
-export type { Text };
+export type { TextMeta };

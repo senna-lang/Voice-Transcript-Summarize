@@ -1,19 +1,23 @@
 'use client';
 import React from 'react';
-import {
-  TextInput,
-  Button,
-  Group,
-  Box,
-  PasswordInput,
-} from '@mantine/core';
+import { TextInput, Button, Group, Box, PasswordInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  User,
+} from 'firebase/auth';
 import { auth } from '@/app/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { useRecoilState } from 'recoil';
+import { userIdState } from '@/app/atoms/userId';
+import { userState } from '@/app/atoms/user';
 
 const Login = () => {
+  const [userId, setUserId] = useRecoilState(userIdState);
+  const [user, setUser] = useRecoilState(userState);
+
   const router = useRouter();
   const form = useForm({
     initialValues: {
@@ -41,14 +45,23 @@ const Login = () => {
               values.password
             )
               .then(userCredential => {
-                router.push('/');
+                const unsubscribed = onAuthStateChanged(auth, newUser => {
+                  setUser(newUser)
+                  setUserId(newUser?.uid ?? null);
+                });
+                return () => {
+                  unsubscribed();
+                };
               })
               .catch(error => {
-                if(error.code==='auth/invalid-credential'){
-                  alert('メールアドレス、またはパスワードが間違っています。')
+                if (error.code === 'auth/invalid-credential') {
+                  alert('メールアドレス、またはパスワードが間違っています。');
                 } else {
                   alert(error.message);
                 }
+              })
+              .finally(() => {
+                router.push('/');
               });
           })}
         >
@@ -71,7 +84,9 @@ const Login = () => {
               </Button>
             </Group>
             <Group justify="flex-end" mt="md">
-              <Link href="/auth/register" className=' text-sm'>アカウントをお持ちのでない方</Link>
+              <Link href="/auth/register" className=" text-sm">
+                アカウントをお持ちのでない方
+              </Link>
             </Group>
           </div>
         </form>

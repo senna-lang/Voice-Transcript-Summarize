@@ -1,13 +1,19 @@
-'use client'
 import React from 'react';
-import { collection, doc,query } from 'firebase/firestore';
-import { db } from '@/app/lib/firebase';
+import { getTextDetail } from '@/app/lib/firestore';
 
-const DetailTexts = ({ params }: { params: { id: string } }) => {
- 
+const DetailTexts = async ({ params }: { params: { id: string } }) => {
+  const detailTexts = await getTextDetail(params.id);
 
-
-  return <div>DetailTexts</div>;
+  return (
+    <div>
+      {detailTexts.map(text => (
+        <div key={text.summary}>
+          <div>{text.vanilla}</div>
+          <div>{text.summary}</div>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default DetailTexts;

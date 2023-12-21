@@ -1,7 +1,7 @@
 'use client';
 import { TextMeta } from '../types/types';
 import Link from 'next/link';
-import { getTextName } from '../lib/firestore';
+import { getTextMeta } from '../lib/firestore';
 import { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { userIdState } from '@/app/atoms/userId';
@@ -12,7 +12,7 @@ const Sidebar = () => {
   useEffect(() => {
     if (userId) {
       const fetchTextName = async () => {
-        const textName = await getTextName(userId);
+        const textName = await getTextMeta(userId);
         setTexts(textName);
       };
       fetchTextName();

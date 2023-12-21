@@ -1,4 +1,5 @@
 import { Timestamp } from "firebase/firestore";
+import { type } from "os";
 
 type TextMeta = {
   id: string;
@@ -7,4 +8,8 @@ type TextMeta = {
   createdAt: Timestamp;
 };
 
-export type { TextMeta };
+type TextDetail = {
+  summary:string;
+  vanilla:string;
+}
+export type { TextMeta,TextDetail };

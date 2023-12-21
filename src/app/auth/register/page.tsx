@@ -2,7 +2,6 @@
 import React from 'react';
 import {
   TextInput,
-  Checkbox,
   Button,
   Group,
   Box,
@@ -27,9 +26,9 @@ const Register = () => {
       email: value =>
         /^\S+@\S+$/.test(value) ? null : '無効なメールアドレスです',
       password: value =>
-        value.length > 8 ? null : 'パスワードは８文字以上で設定してください。',
+        value.length >= 8 ? null : 'パスワードは８文字以上で設定してください。',
       APIkey: value =>
-        value.startsWith('sk-') && value.length === 125
+        value.startsWith('sk-')
           ? null
           : '無効なkeyです。',
     },
@@ -48,6 +47,7 @@ const Register = () => {
             )
               .then(userCredential => {
                 const user = userCredential.user;
+                //ここに
                 router.push('/auth/login');
               })
               .catch(error => {

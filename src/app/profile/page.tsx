@@ -10,7 +10,7 @@ const Profile = () => {
   const [user, setUser] = useRecoilState(userState);
   return (
     <div>
-      <Sidebar userId={userId}/>
+      <Sidebar/>
     </div>
   );
 };

@@ -1,9 +1,17 @@
 'use client';
 
+import { addDoc, collection, doc } from 'firebase/firestore';
 import { useState } from 'react';
+import { db } from '../lib/firebase';
+import { useRecoilState } from 'recoil';
+import { userIdState } from '@/app/atoms/userId';
+import { userState } from '@/app/atoms/user';
 
 export default function Form() {
   const [text, setText] = useState('');
+  const [userId, setUserId] = useRecoilState(userIdState);
+  const [user, setUser] = useRecoilState(userState);
+  console.log(user);
   const submitFile = async (e: any) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -15,6 +23,17 @@ export default function Form() {
     if (whisperText) {
       setText(whisperText);
     }
+  };
+
+  const saveTexts = async () => {
+    const textData = {
+      summary: "test",
+      vanilla: text,
+    };
+    const docRef = doc(db, 'texts', 'prIWjsCjv13h0x2JWJog');
+    const detailTextCollectionRef = collection(docRef, 'text');
+    console.log(textData)
+    await addDoc(detailTextCollectionRef, textData);
   };
   return (
     <div>
@@ -28,6 +47,7 @@ export default function Form() {
         </div>
       </form>
       <div>変換: {text}</div>
+      <button onClick={saveTexts}>保存</button>
     </div>
   );
 }

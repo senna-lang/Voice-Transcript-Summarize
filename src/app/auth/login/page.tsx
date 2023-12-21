@@ -46,7 +46,7 @@ const Login = () => {
             )
               .then(userCredential => {
                 const unsubscribed = onAuthStateChanged(auth, newUser => {
-                  setUser(newUser)
+                  // setUser(newUser)
                   setUserId(newUser?.uid ?? null);
                 });
                 return () => {

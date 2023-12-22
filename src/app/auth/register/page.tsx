@@ -47,7 +47,6 @@ const Register = () => {
             )
               .then(userCredential => {
                 const user = userCredential.user;
-                //ここに
                 router.push('/auth/login');
               })
               .catch(error => {

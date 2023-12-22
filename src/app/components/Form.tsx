@@ -13,7 +13,7 @@ export default function Form() {
   const [textTitle, setTextTitle] = useState('');
   const [userId, setUserId] = useRecoilState(userIdState);
   const [user, setUser] = useRecoilState(userState);
-  console.log(userId)
+
   const submitFile = async (e: any) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -28,6 +28,11 @@ export default function Form() {
   };
 
   const saveTexts = async () => {
+    if (textTitle == '') {
+      window.alert('タイトルを入力してください。');
+    } else if (text == '') {
+      window.alert('生成テキストが空です');
+    }
     const TextMeta = {
       name: textTitle,
       userId,

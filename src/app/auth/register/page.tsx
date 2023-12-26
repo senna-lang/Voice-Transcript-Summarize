@@ -27,10 +27,10 @@ const Register = () => {
         /^\S+@\S+$/.test(value) ? null : '無効なメールアドレスです',
       password: value =>
         value.length >= 8 ? null : 'パスワードは８文字以上で設定してください。',
-      APIkey: value =>
-        value.startsWith('sk-')
-          ? null
-          : '無効なkeyです。',
+      // APIkey: value =>
+      //   value.startsWith('sk-')
+      //     ? null
+      //     : '無効なkeyです。',
     },
   });
 
@@ -70,12 +70,12 @@ const Register = () => {
             placeholder="set your password"
             {...form.getInputProps('password')}
           />
-          <TextInput
+          {/* <TextInput
             withAsterisk
             label="API_KEY"
             placeholder="your OPENAI_API_KEY"
             {...form.getInputProps('APIkey')}
-          />
+          /> */}
           <div className="flex justify-between">
             <Group justify="flex-end" mt="md">
               <Button type="submit" className=" bg-slate-500">

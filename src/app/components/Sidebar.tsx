@@ -2,7 +2,6 @@
 import { TextMeta } from '../types/types';
 import { useState } from 'react';
 import { useRecoilState } from 'recoil';
-import { userIdState } from '@/app/atoms/userId';
 import { textIdState } from '../atoms/textId';
 import { textTitleState } from '../atoms/textTitle';
 import { auth } from '../lib/firebase';
@@ -14,9 +13,10 @@ import { db } from '../lib/firebase';
 import { getNewTextMeta } from '../lib/firestore';
 import { useTextMeta } from '../hooks/useTextMeta';
 import { useTextDetail } from '../hooks/useTextDetail';
+import { useUserIdState } from '@/app/atoms/userId';
 
 const Sidebar = () => {
-  const [userId, setUserId] = useRecoilState(userIdState);
+  const [userId, setUserId] = useUserIdState();
   const [textId, setTextId] = useRecoilState(textIdState);
   const [textTitle, setTextTitle] = useRecoilState(textTitleState);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
@@ -71,12 +71,13 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     auth.signOut();
+    setUserId(null);
     metaTrigger();
   };
 
-  const selectText = (title: string, id: string) => {
-    setTextId(id);
+  const selectText = async (title: string, id: string) => {
     setTextTitle(title);
+    await setTextId(id);
     detailTrigger();
   };
 
@@ -90,14 +91,14 @@ const Sidebar = () => {
 
   return (
     <div className="bg-custom-blue h-full overflow-y-auto px-5 flex flex-col">
-      <div className="flex-grow">
-        <div
-          onClick={handleModalOpen}
-          className="cursor-pointer flex justify-evenly items-center border mt-2 rounded-md hover:bg-blue-800 duration-150"
-        >
-          <span className="text-white p-4 text-2xl">＋</span>
-          <h1 className="text-white text-xl font-semibold p-4">New Chat</h1>
-        </div>
+      <div
+        onClick={handleModalOpen}
+        className="cursor-pointer flex justify-evenly items-center border mt-2 rounded-md hover:bg-blue-800 duration-150"
+      >
+        <span className="text-white p-4 text-2xl">＋</span>
+        <h1 className="text-white text-xl font-semibold p-4">New Chat</h1>
+      </div>
+      <div className="flex-grow overflow-y-auto">
         <ul>
           {textMeta ? (
             textMeta.map((meta: TextMeta) => (

@@ -1,6 +1,23 @@
-import { atom } from 'recoil';
+import { useState } from 'react';
+import { atom, useRecoilState } from 'recoil';
+import { useEffect } from 'react';
+import { recoilPersist } from 'recoil-persist';
 
-export const userIdState = atom<string | null>({
+const { persistAtom } = recoilPersist();
+
+export const userIdState = atom({
   key: 'userIdState',
   default: null,
+  effects: [persistAtom],
 });
+
+export function useUserIdState() {
+  const [didMount, setDidMount] = useState(false);
+  const [userId, setUserId] = useRecoilState(userIdState);
+
+  useEffect(() => {
+    setDidMount(true);
+  }, []);
+
+  return [didMount ? userId : null, setUserId];
+}

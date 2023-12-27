@@ -2,6 +2,7 @@ import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
 import axios from 'axios';
 import { useCallback } from 'react';
+import { TextMeta } from '../types/types';
 
 const url = '/api/textTitle';
 

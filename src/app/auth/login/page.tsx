@@ -48,6 +48,7 @@ const Login = () => {
                 const unsubscribed = onAuthStateChanged(auth, newUser => {
                   // setUser(newUser)
                   setUserId(newUser?.uid ?? null);
+                  router.push('/');
                 });
                 return () => {
                   unsubscribed();
@@ -60,9 +61,6 @@ const Login = () => {
                   alert(error.message);
                 }
               })
-              .finally(() => {
-                router.push('/');
-              });
           })}
         >
           <TextInput

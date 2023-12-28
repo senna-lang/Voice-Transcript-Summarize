@@ -40,13 +40,13 @@ const Sidebar = () => {
   };
 
   const saveTexts = async () => {
-    if (textTitle == '') {
-      window.alert('タイトルを入力してください。');
-      return;
-    } else if (text == '') {
+     if (text == '') {
       window.alert('生成テキストが空です');
       return;
-    }
+    }else if (textTitle == '') {
+      window.alert('タイトルを入力してください。');
+      return;
+    } 
     const TextMeta = {
       name: textTitle,
       userId,

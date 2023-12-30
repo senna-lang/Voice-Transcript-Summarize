@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
 
   // フォームデータから音声データを取得
-  const resource = formData.get('resource') as File;
+  const resource = formData.get('file') as File;
 
   // Whisper-1モデルで日本語の文字起こしを行うためのフォームデータを作成
   const transcriptionFormData = new FormData();
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     body: transcriptionFormData,
   });
 
-  // 文字起こしに失敗した場合はエラーメッセージを返す
+  //文字起こしに失敗した場合はエラーメッセージを返す
   if (!res.ok) {
     return NextResponse.json({
       success: false,

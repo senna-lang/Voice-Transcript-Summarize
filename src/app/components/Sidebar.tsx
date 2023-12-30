@@ -14,6 +14,17 @@ import { getNewTextMeta } from '../lib/firestore';
 import { useTextMeta } from '../hooks/useTextMeta';
 import { useTextDetail } from '../hooks/useTextDetail';
 import { useUserIdState } from '@/app/atoms/userId';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import { useEffect } from 'react';
+import { FileUploader } from 'react-drag-drop-files';
+
+const ffmpeg = createFFmpeg({
+  //ffmpegの初期化
+  corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+  log: true,
+});
+const MAX_FILE_SIZE = 25000000;
+const fileTypes = ['mp4', 'mp3', 'm4a'];
 
 const Sidebar = () => {
   const [userId, setUserId] = useUserIdState();
@@ -25,9 +36,49 @@ const Sidebar = () => {
   const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
 
-  const submitFile = async (e: any) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  useEffect(() => {
+    const load = async () => {
+      await ffmpeg.load();
+    };
+    // Loadチェック
+    if (!ffmpeg.isLoaded()) {
+      load();
+    }
+  }, []);
+
+  const submitFile = async (file: File) => {
+    ffmpeg.FS('writeFile', file.name, await fetchFile(file));
+    await ffmpeg.run(
+      '-i', // 入力ファイルを指定
+      file.name,
+      '-vn', // ビデオストリームを無視し、音声ストリームのみを出力
+      '-ar', // オーディオサンプリング周波数
+      '16000',
+      '-ac', // チャンネル
+      '1',
+      '-b:a', // ビットレート
+      '64k',
+      '-f', // 出力ファイルのフォーマット
+      'mp3',
+      'output.mp3'
+    );
+    const readData = ffmpeg.FS('readFile', 'output.mp3');
+    const audioBlob = new Blob([readData.buffer], { type: 'audio/mp3' });
+
+    // サイズチェック Whisperは最大25MB
+    if (audioBlob.size > MAX_FILE_SIZE) {
+      alert('サイズが大きすぎます');
+      return;
+    }
+
+    const audio_file = new File([audioBlob], 'audio.mp3', {
+      type: audioBlob.type,
+      lastModified: Date.now(),
+    });
+
+    const formData = new FormData();
+    formData.append('file', audio_file);
+
     const res = await fetch('/api', {
       method: 'POST',
       body: formData,
@@ -40,13 +91,13 @@ const Sidebar = () => {
   };
 
   const saveTexts = async () => {
-     if (text == '') {
+    if (text == '') {
       window.alert('生成テキストが空です');
       return;
-    }else if (textTitle == '') {
+    } else if (textTitle == '') {
       window.alert('タイトルを入力してください。');
       return;
-    } 
+    }
     const TextMeta = {
       name: textTitle,
       userId,
@@ -96,7 +147,7 @@ const Sidebar = () => {
         className="cursor-pointer flex justify-evenly items-center border mt-2 rounded-md hover:bg-blue-800 duration-150"
       >
         <span className="text-white p-4 text-2xl">＋</span>
-        <h1 className="text-white text-xl font-semibold p-4">New Chat</h1>
+        <h1 className="text-white text-xl font-semibold p-4">新規作成</h1>
       </div>
       <div className="flex-grow overflow-y-auto">
         <ul>
@@ -118,38 +169,32 @@ const Sidebar = () => {
       <Modal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        title="Authentication"
+        title="文字起こしするファイルをアップロードします"
         centered
       >
-        <form onSubmit={submitFile}>
-          <div className="flex flex-col">
-            <label>音声ファイル</label>
-            <input type="file" name="resource" accept="audio/*" required />
-          </div>
-          <div className="mt-2">
-            <Button type="submit" fullWidth>
-              送信
-            </Button>
-          </div>
-        </form>
+        <FileUploader handleChange={submitFile} name="file" types={fileTypes} />
       </Modal>
       <Modal
         opened={fsModalOpened}
         onClose={() => setFsModalOpened(false)}
-        title="This is a fullscreen modal"
         fullScreen
         radius={0}
         transitionProps={{ transition: 'fade', duration: 200 }}
       >
-        <div>変換: {text}</div>
-        <input
-          type="text"
-          className=" border"
-          onChange={e => setTextTitle(e.target.value)}
-        />
-        <Button loading={isMutating} onClick={saveTexts}>
-          保存
-        </Button>
+        <div className=" h-screen flex">
+          <div className="flex flex-col items-center bg-slate-500 w-1/2 rounded-md mx-3 p-8">
+            <h1 className=" text-xl font-bold mb-3">
+              文字起こしされたテキスト
+            </h1>
+            <div className=" mb-7">{text}</div>
+            <Button>AIに要約してもらう</Button>
+          </div>
+          <div className="flex flex-col items-center bg-blue-300 w-1/2 rounded-md mx-3 p-8">
+            <h1 className=" text-xl font-bold mb-3">要約されたテキスト</h1>
+            <div className=" mb-7">{text}</div>
+            <Button onClick={saveTexts}>保存する</Button>
+          </div>
+        </div>
       </Modal>
 
       {userId && (

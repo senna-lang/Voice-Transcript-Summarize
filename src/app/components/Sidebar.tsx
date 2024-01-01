@@ -17,6 +17,9 @@ import { useUserIdState } from '@/app/atoms/userId';
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import { useEffect } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
+import { FaFileAudio } from 'react-icons/fa6';
+import OpenAI from 'openai';
+import axios from 'axios';
 
 const ffmpeg = createFFmpeg({
   //ffmpegの初期化
@@ -32,9 +35,11 @@ const Sidebar = () => {
   const [textTitle, setTextTitle] = useRecoilState(textTitleState);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
   const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
-  const [text, setText] = useState<string>('');
+  const [vanillaText, setVanillaText] = useState<string>('');
+  const [summaryText, setSummaryText] = useState<string>('');
   const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const load = async () => {
@@ -47,6 +52,7 @@ const Sidebar = () => {
   }, []);
 
   const submitFile = async (file: File) => {
+    setLoading(true);
     ffmpeg.FS('writeFile', file.name, await fetchFile(file));
     await ffmpeg.run(
       '-i', // 入力ファイルを指定
@@ -68,6 +74,7 @@ const Sidebar = () => {
     // サイズチェック Whisperは最大25MB
     if (audioBlob.size > MAX_FILE_SIZE) {
       alert('サイズが大きすぎます');
+      setLoading(false);
       return;
     }
 
@@ -85,13 +92,13 @@ const Sidebar = () => {
     });
     const whisperText = await res.json();
     if (whisperText) {
-      setText(whisperText);
+      setVanillaText(whisperText);
       setFsModalOpened(true);
     }
   };
 
   const saveTexts = async () => {
-    if (text == '') {
+    if (vanillaText == '') {
       window.alert('生成テキストが空です');
       return;
     } else if (textTitle == '') {
@@ -105,7 +112,7 @@ const Sidebar = () => {
     };
     const textData = {
       summary: 'test',
-      vanilla: text,
+      vanilla: vanillaText,
     };
     const newTextRef = collection(db, 'texts');
     await addDoc(newTextRef, TextMeta);
@@ -113,11 +120,24 @@ const Sidebar = () => {
     const docRef = doc(db, 'texts', `${newTextMeta?.id}`);
     const detailTextCollectionRef = collection(docRef, 'text');
     await addDoc(detailTextCollectionRef, textData);
-    setText('');
+    setVanillaText('');
     setTextTitle('');
     setFsModalOpened(false);
     setModalOpened(false);
     metaTrigger();
+  };
+
+  const createSummary = async () => {
+    const prompt = `「${vanillaText}」この文章を元にアジェンダとサマリーを作成してください`;
+    const body = JSON.stringify({ prompt: prompt });
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    const res = await axios.post('/api/chatgpt', body, {
+      headers: headers,
+    });
+    const summaryText = res.data;
+    setSummaryText(summaryText.choices[0].message.content);
   };
 
   const handleLogout = () => {
@@ -172,7 +192,15 @@ const Sidebar = () => {
         title="文字起こしするファイルをアップロードします"
         centered
       >
-        <FileUploader handleChange={submitFile} name="file" types={fileTypes} />
+        <FileUploader handleChange={submitFile} name="file" types={fileTypes}>
+          <div className=" border-blue-400 border-dashed border-2 rounded-md p-5">
+            <div className=" flex flex-col items-center justify-center">
+              <FaFileAudio className="w-16 h-16 text-sky-400" />
+              <div>音声ファイルを文字起こしする</div>
+              <div className=" text-sm text-gray-500">(MP3,MP4,M4A)</div>
+            </div>
+          </div>
+        </FileUploader>
       </Modal>
       <Modal
         opened={fsModalOpened}
@@ -186,12 +214,12 @@ const Sidebar = () => {
             <h1 className=" text-xl font-bold mb-3">
               文字起こしされたテキスト
             </h1>
-            <div className=" mb-7">{text}</div>
-            <Button>AIに要約してもらう</Button>
+            <div className=" mb-7">{vanillaText}</div>
+            <Button onClick={createSummary}>AIに要約してもらう</Button>
           </div>
           <div className="flex flex-col items-center bg-blue-300 w-1/2 rounded-md mx-3 p-8">
             <h1 className=" text-xl font-bold mb-3">要約されたテキスト</h1>
-            <div className=" mb-7">{text}</div>
+            <div className=" mb-7">{summaryText}</div>
             <Button onClick={saveTexts}>保存する</Button>
           </div>
         </div>

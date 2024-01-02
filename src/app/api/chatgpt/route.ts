@@ -8,8 +8,9 @@ export async function POST(req: NextRequest) {
   });
   const { prompt } = await req.json();
   const gptRes = await openAi.chat.completions.create({
-    messages: [{ role: 'user', content: prompt }],
-    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: prompt ,}],
+    model: 'gpt-3.5-turbo-1106',
+    temperature:0,
   });
   const response = NextResponse.json(gptRes);
   return response;

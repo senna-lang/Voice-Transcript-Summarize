@@ -7,7 +7,7 @@ import { textTitleState } from '../atoms/textTitle';
 import { auth } from '../lib/firebase';
 import { BiLogOut } from 'react-icons/bi';
 import Link from 'next/link';
-import { Modal, Button, Textarea } from '@mantine/core';
+import { Modal, Button, Textarea, TextInput } from '@mantine/core';
 import { addDoc, collection, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { getNewTextMeta } from '../lib/firestore';
@@ -18,8 +18,8 @@ import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import { useEffect } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { FaFileAudio } from 'react-icons/fa6';
-import OpenAI from 'openai';
 import axios from 'axios';
+import ReactLoading from 'react-loading';
 
 const ffmpeg = createFFmpeg({
   //ffmpegの初期化
@@ -91,10 +91,10 @@ const Sidebar = () => {
       body: formData,
     });
     const whisperText = await res.json();
-    if (whisperText) {
-      setVanillaText(whisperText);
-      setFsModalOpened(true);
-    }
+    const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
+    setVanillaText(cleanedText);
+    setLoading(false);
+    setFsModalOpened(true);
   };
 
   const saveTexts = async () => {
@@ -111,7 +111,7 @@ const Sidebar = () => {
       createdAt: serverTimestamp(),
     };
     const textData = {
-      summary: 'test',
+      summary: summaryText,
       vanilla: vanillaText,
     };
     const newTextRef = collection(db, 'texts');
@@ -121,6 +121,7 @@ const Sidebar = () => {
     const detailTextCollectionRef = collection(docRef, 'text');
     await addDoc(detailTextCollectionRef, textData);
     setVanillaText('');
+    setSummaryText('');
     setTextTitle('');
     setFsModalOpened(false);
     setModalOpened(false);
@@ -193,34 +194,61 @@ const Sidebar = () => {
         centered
       >
         <FileUploader handleChange={submitFile} name="file" types={fileTypes}>
-          <div className=" border-blue-400 border-dashed border-2 rounded-md p-5">
-            <div className=" flex flex-col items-center justify-center">
-              <FaFileAudio className="w-16 h-16 text-sky-400" />
-              <div>音声ファイルを文字起こしする</div>
-              <div className=" text-sm text-gray-500">(MP3,MP4,M4A)</div>
+          {loading ? (
+            <div className=" border-blue-400 border-dashed border-2 rounded-md p-5">
+              <div className=" flex flex-col items-center justify-center">
+                <div className=" my-5">
+                  <ReactLoading
+                    type="bars"
+                    color="rgb(96 165 250)"
+                    height="50px"
+                    width="50px"
+                    className="mx-auto"
+                  />
+                </div>
+                <div>アップロード中...</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className=" border-blue-400 border-dashed border-2 rounded-md p-5">
+              <div className=" flex flex-col items-center justify-center">
+                <FaFileAudio className="w-16 h-16 text-sky-400" />
+                <div>音声ファイルを文字起こしする</div>
+                <div className=" text-sm text-gray-500">(MP3,MP4,M4A)</div>
+              </div>
+            </div>
+          )}
         </FileUploader>
       </Modal>
       <Modal
         opened={fsModalOpened}
-        onClose={() => setFsModalOpened(false)}
+        // withCloseButton={false}
+        onClose={() => {
+          setFsModalOpened(false);
+          setSummaryText('');
+        }}
         fullScreen
         radius={0}
         transitionProps={{ transition: 'fade', duration: 200 }}
       >
-        <div className=" h-screen flex">
-          <div className="flex flex-col items-center bg-slate-500 w-1/2 rounded-md mx-3 p-8">
+        <div className=" h-[90vh] flex">
+          <div className="flex flex-col items-center bg-slate-500 w-1/2 rounded-md mx-3 p-8 overflow-y-auto">
             <h1 className=" text-xl font-bold mb-3">
               文字起こしされたテキスト
             </h1>
             <div className=" mb-7">{vanillaText}</div>
             <Button onClick={createSummary}>AIに要約してもらう</Button>
           </div>
-          <div className="flex flex-col items-center bg-blue-300 w-1/2 rounded-md mx-3 p-8">
+          <div className="flex flex-col items-center bg-blue-300 w-1/2 rounded-md mx-3 p-8 overflow-y-auto">
             <h1 className=" text-xl font-bold mb-3">要約されたテキスト</h1>
             <div className=" mb-7">{summaryText}</div>
-            <Button onClick={saveTexts}>保存する</Button>
+            <div className="flex justify-between">
+              <Button onClick={saveTexts}>保存する</Button>
+              <TextInput
+                placeholder="タイトルを入力してください"
+                onChange={e => setTextTitle(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </Modal>

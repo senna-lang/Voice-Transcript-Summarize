@@ -1,8 +1,8 @@
 import "./styles/mantineBase.css";
+import './globals.css';
 import type { Metadata } from 'next';
 import '@mantine/core/styles.css';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
-import './globals.css';
 import RecoilProvider from './RecoilProvider';
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export default function RootLayout({
       <head>
         <ColorSchemeScript />
       </head>
-      <body>
+      <body className="text-black">
         <RecoilProvider>
           <MantineProvider>{children}</MantineProvider>
         </RecoilProvider>

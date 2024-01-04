@@ -18,6 +18,9 @@ const config: Config = {
       },
     },
   },
+  corePlugins: {
+    preflight: false, // リセットCSSの無効化
+  },
   plugins: [],
 };
 export default config;

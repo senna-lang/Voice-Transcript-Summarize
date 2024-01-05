@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Sidebar from './components/Sidebar';
-import Chat from './components/Chat';
+import Chat from './components/TextData';
 import Header from './components/Header';
 
 export const runtime = 'edge';

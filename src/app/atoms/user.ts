@@ -1,4 +1,3 @@
-import { User } from 'firebase/auth'; 
 import { useState } from 'react';
 import { atom, useRecoilState } from 'recoil';
 import { useEffect } from 'react';

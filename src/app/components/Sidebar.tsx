@@ -14,16 +14,17 @@ import { getNewTextMeta } from '../lib/firestore';
 import { useTextMeta } from '../hooks/useTextMeta';
 import { useTextDetail } from '../hooks/useTextDetail';
 import { useUserIdState } from '@/app/atoms/userId';
+import { apiKeyState } from '../atoms/apikey';
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import { useEffect } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 import { FaFileAudio } from 'react-icons/fa6';
-import axios from 'axios';
 import ReactLoading from 'react-loading';
 import { HiMiniArrowsPointingOut } from 'react-icons/hi2';
 import { FaRegFileLines } from 'react-icons/fa6';
 import { AiOutlineFileAdd } from 'react-icons/ai';
 import OpenAI from 'openai';
+import { useUserState } from '../atoms/user';
 
 const ffmpeg = createFFmpeg({
   //ffmpegの初期化
@@ -33,15 +34,12 @@ const ffmpeg = createFFmpeg({
 const MAX_FILE_SIZE = 25000000;
 const fileTypes = ['mp4', 'mp3', 'm4a'];
 
-const openAi = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
-
 const Sidebar = () => {
   const [userId, setUserId] = useUserIdState();
+  const [user, setUser] = useUserState();
   const [textId, setTextId] = useRecoilState(textIdState);
   const [textTitle, setTextTitle] = useRecoilState(textTitleState);
+  const [apiKey, setApiKey] = useRecoilState(apiKeyState);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
   const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
   const [vanillaText, setVanillaText] = useState<string>('');
@@ -54,6 +52,10 @@ const Sidebar = () => {
   const nextStep = () =>
     setActive(current => (current < 3 ? current + 1 : current));
 
+  const openAi = new OpenAI({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true,
+  });
   useEffect(() => {
     const load = async () => {
       await ffmpeg.load();
@@ -142,19 +144,32 @@ const Sidebar = () => {
   };
 
   const createSummary = async () => {
-    const prompt = `「${vanillaText}」この文章を元にアジェンダとサマリーを作成してください`;
-    const gptRes = await openAi.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'gpt-3.5-turbo-1106',
-      temperature: 0,
-    });
-    setSummaryText(gptRes.choices[0].message.content);
-    setLoading1(false);
+    if (apiKey == '') {
+      window.alert('openaiのAPIKeyをセットしてください');
+      setLoading1(false);
+    } else {
+      const prompt = `「${vanillaText}」この文章を元にアジェンダとサマリーを作成してください`;
+      try {
+        const gptRes = await openAi.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          model: 'gpt-3.5-turbo-1106',
+          temperature: 0,
+        });
+        setSummaryText(gptRes.choices[0].message.content);
+        nextStep();
+        setLoading1(false);
+      } catch {
+        window.alert('APIKeyが間違っている可能性があります。')
+        setLoading1(false);
+      }
+    }
   };
 
   const handleLogout = () => {
     auth.signOut();
-    setUserId(null);
+    setUser(null);
+    setApiKey('');
+    setTextTitle('');
     metaTrigger();
   };
 
@@ -210,7 +225,7 @@ const Sidebar = () => {
         </ul>
       </div>
 
-      {userId ? (
+      {user ? (
         <div
           onClick={() => handleLogout()}
           className="text-lg font-semibold flex items-center justify-evenly mb-4 cursor-pointer p-4 rounded-md text-slate-900 hover:bg-blue-500 hover:text-white duration-150"
@@ -265,7 +280,7 @@ const Sidebar = () => {
         onClose={() => {
           setFsModalOpened(false);
           setSummaryText('');
-          setActive(0);
+          setActive(1);
           setLoading1(false);
           setLoading2(false);
         }}
@@ -320,10 +335,10 @@ const Sidebar = () => {
                   <Button
                     onClick={() => {
                       setLoading1(true);
-                      nextStep();
                       createSummary();
                     }}
                     className="mb-2"
+                    disabled={loading1}
                   >
                     要約してもらう
                   </Button>
@@ -339,6 +354,7 @@ const Sidebar = () => {
                         saveTexts();
                         setLoading1(false);
                       }}
+                      disabled={loading1}
                     >
                       保存する
                     </Button>
@@ -355,6 +371,7 @@ const Sidebar = () => {
                       setLoading2(false);
                     }}
                     className="mb-2 opacity-0"
+                    disabled={loading2}
                   >
                     要約してもらう
                   </Button>
@@ -370,6 +387,7 @@ const Sidebar = () => {
                         saveTexts();
                         setLoading2(false);
                       }}
+                      disabled={loading2}
                     >
                       保存する
                     </Button>

@@ -7,7 +7,7 @@ import { textTitleState } from '../atoms/textTitle';
 import { auth } from '../lib/firebase';
 import { BiLogOut } from 'react-icons/bi';
 import Link from 'next/link';
-import { Modal, Button, Textarea, TextInput } from '@mantine/core';
+import { Modal, Button, TextInput, Stepper, Group } from '@mantine/core';
 import { addDoc, collection, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { getNewTextMeta } from '../lib/firestore';
@@ -20,10 +20,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { FaFileAudio } from 'react-icons/fa6';
 import axios from 'axios';
 import ReactLoading from 'react-loading';
-import { IconContext } from 'react-icons';
-import { RiRobot2Line } from 'react-icons/ri';
 import { HiMiniArrowsPointingOut } from 'react-icons/hi2';
-import { FaEnvelopeOpenText } from 'react-icons/fa';
 import { FaRegFileLines } from 'react-icons/fa6';
 import { AiOutlineFileAdd } from 'react-icons/ai';
 
@@ -45,7 +42,11 @@ const Sidebar = () => {
   const [summaryText, setSummaryText] = useState<string>('');
   const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading1, setLoading1] = useState<boolean>(false);
+  const [loading2, setLoading2] = useState<boolean>(false);
+  const [active, setActive] = useState(1);
+  const nextStep = () =>
+    setActive(current => (current < 3 ? current + 1 : current));
 
   useEffect(() => {
     const load = async () => {
@@ -58,7 +59,7 @@ const Sidebar = () => {
   }, []);
 
   const submitFile = async (file: File) => {
-    setLoading(true);
+    setLoading1(true);
     ffmpeg.FS('writeFile', file.name, await fetchFile(file));
     await ffmpeg.run(
       '-i', // 入力ファイルを指定
@@ -80,7 +81,7 @@ const Sidebar = () => {
     // サイズチェック Whisperは最大25MB
     if (audioBlob.size > MAX_FILE_SIZE) {
       alert('サイズが大きすぎます');
-      setLoading(false);
+      setLoading1(false);
       return;
     }
 
@@ -99,7 +100,7 @@ const Sidebar = () => {
     const whisperText = await res.json();
     const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
     setVanillaText(cleanedText);
-    setLoading(false);
+    setLoading1(false);
     setFsModalOpened(true);
   };
 
@@ -145,6 +146,7 @@ const Sidebar = () => {
     });
     const summaryText = res.data;
     setSummaryText(summaryText.choices[0].message.content);
+    setLoading1(false);
   };
 
   const handleLogout = () => {
@@ -191,7 +193,7 @@ const Sidebar = () => {
               <li
                 key={meta.id}
                 className="cursor-pointer flex items-center border-b border-black mb-2 p-4 text-slate-500 font-semibold hover:rounded-md hover:bg-blue-500 hover:text-white hover:border-white duration-150 "
-                onClick={() => selectText(meta.name, meta.id)} 
+                onClick={() => selectText(meta.name, meta.id)}
               >
                 <span className="inline-block mr-2">
                   <FaRegFileLines />
@@ -204,6 +206,24 @@ const Sidebar = () => {
           )}
         </ul>
       </div>
+
+      {userId ? (
+        <div
+          onClick={() => handleLogout()}
+          className="text-lg font-semibold flex items-center justify-evenly mb-4 cursor-pointer p-4 rounded-md text-slate-900 hover:bg-blue-500 hover:text-white duration-150"
+        >
+          <BiLogOut />
+          <span>ログアウト</span>
+        </div>
+      ) : (
+        <Link
+          href="/auth/login"
+          className="text-lg font-semibold flex items-center justify-evenly mb-4 cursor-pointer p-4 rounded-md text-slate-900 hover:bg-blue-500 duration-150"
+        >
+          <BiLogOut />
+          <span>ログイン</span>
+        </Link>
+      )}
       <Modal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
@@ -211,7 +231,7 @@ const Sidebar = () => {
         centered
       >
         <FileUploader handleChange={submitFile} name="file" types={fileTypes}>
-          {loading ? (
+          {loading1 ? (
             <div className=" border-blue-400 border-dashed border-2 rounded-md p-5">
               <div className=" flex flex-col items-center justify-center">
                 <div className=" my-5">
@@ -242,70 +262,121 @@ const Sidebar = () => {
         onClose={() => {
           setFsModalOpened(false);
           setSummaryText('');
+          setActive(0);
+          setLoading1(false);
+          setLoading2(false);
         }}
         fullScreen
         radius={0}
         transitionProps={{ transition: 'fade', duration: 200 }}
       >
-        <div className=" h-[90vh] flex">
-          <div className="flex flex-col items-center w-1/2 mx-3 pw-4 pb-4">
-            <div className="mb-2 flex flex-col items-center">
-              <h1 className=" text-xl font-bold mb-3">
-                文字起こしされたテキスト
-              </h1>
+        <div className=" h-[90vh] mx-3 flex">
+          <div className="flex flex-col items-center w-1/2 p-8 bg-slate-100 rounded-lg">
+            <div className=" w-full h-1/2">
+              <h2 className=" font-semibold text-2xl w-full text-center mb-4">
+                Transcript
+              </h2>
+              <div className="h-[85%] border-dashed border-blue-300 border-2 p-6 mb-2 rounded-lg overflow-y-auto">
+                {vanillaText}
+              </div>
             </div>
-            <div className=" mb-7 bg-slate-500 rounded-lg p-8 overflow-y-auto min-h-[70vh]">
-              {vanillaText}
-            </div>
-            <div className=" flex ">
-              <IconContext.Provider value={{ size: '100px' }}>
-                <FaEnvelopeOpenText />
-              </IconContext.Provider>
-              <Button onClick={createSummary}>AIに要約してもらう⇨</Button>
-            </div>
-          </div>
-          <div className="flex flex-col items-cente w-1/2 rounded-md mx-3 pw-4 pb-4">
-            <div className="mb-2 flex flex-col items-center">
-              <h1 className=" text-xl font-bold mb-3">
-                文字起こしされたテキスト
-              </h1>
-            </div>
-            <div className=" mb-7 bg-slate-500 rounded-md p-8 overflow-y-auto min-h-[70vh]">
-              {summaryText}
-            </div>
-            <div className="flex">
-              <IconContext.Provider value={{ size: '100px' }}>
-                <RiRobot2Line />
-              </IconContext.Provider>
-              <div className="flex justify-between">
-                <Button onClick={saveTexts}>保存する</Button>
-                <TextInput
-                  placeholder="タイトルを入力してください"
-                  onChange={e => setTextTitle(e.target.value)}
-                />
+            <div className=" w-full h-1/2">
+              <h2 className=" font-semibold text-2xl w-full text-center m-4">
+                Summary
+              </h2>
+              <div className="h-[85%] border-dashed border-blue-300 border-2 p-6 rounded-lg overflow-y-auto">
+                {summaryText}
               </div>
             </div>
           </div>
+          <div className="flex flex-col items-center justify-center w-1/2 rounded-lg mx-3 p-8 bg-slate-100">
+            <Stepper active={active} orientation="vertical" size="xl">
+              <Stepper.Step
+                label="Transcription"
+                description="文字起こし"
+              ></Stepper.Step>
+              <Stepper.Step
+                label="Save or Summarize"
+                description="保存か要約を選んでください"
+                loading={loading1}
+              >
+                文字起こしのみを保存 or ChatGptに要約してもらう
+              </Stepper.Step>
+              <Stepper.Step
+                label="Save All"
+                description="全て保存"
+                loading={loading2}
+              >
+                文字起こしと要約の両方を保存する
+              </Stepper.Step>
+            </Stepper>
+
+            <Group justify="between" mt="xl">
+              {active == 1 && (
+                <div className="flex flex-col">
+                  <Button
+                    onClick={() => {
+                      setLoading1(true);
+                      nextStep();
+                      createSummary();
+                    }}
+                    className="mb-2"
+                  >
+                    要約してもらう
+                  </Button>
+                  <div className=" flex">
+                    <TextInput
+                      placeholder="タイトルを入力"
+                      onChange={e => setTextTitle(e.target.value)}
+                    />
+                    <Button
+                      variant="default"
+                      onClick={() => {
+                        setLoading1(true);
+                        saveTexts();
+                        setLoading1(false);
+                      }}
+                    >
+                      保存する
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {active == 2 && (
+                <div className="flex flex-col">
+                  <Button
+                    onClick={() => {
+                      setLoading2(true);
+                      createSummary();
+                      nextStep();
+                      setLoading2(false);
+                    }}
+                    className="mb-2 opacity-0"
+                  >
+                    要約してもらう
+                  </Button>
+                  <div className=" flex">
+                    <TextInput
+                      placeholder="タイトルを入力"
+                      onChange={e => setTextTitle(e.target.value)}
+                    />
+                    <Button
+                      variant="default"
+                      onClick={() => {
+                        setLoading2(true);
+                        saveTexts();
+                        setLoading2(false);
+                      }}
+                    >
+                      保存する
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Group>
+          </div>
         </div>
       </Modal>
-
-      {userId ? (
-        <div
-          onClick={() => handleLogout()}
-          className="text-lg font-semibold flex items-center justify-evenly mb-4 cursor-pointer p-4 rounded-md text-slate-900 hover:bg-blue-500 hover:text-white duration-150"
-        >
-          <BiLogOut />
-          <span>ログアウト</span>
-        </div>
-      ) : (
-        <Link
-          href="/auth/login"
-          className="text-lg font-semibold flex items-center justify-evenly mb-4 cursor-pointer p-4 text-slate-900 hover:bg-blue-500 duration-150"
-        >
-          <BiLogOut />
-          <span>ログイン</span>
-        </Link>
-      )}
     </div>
   );
 };

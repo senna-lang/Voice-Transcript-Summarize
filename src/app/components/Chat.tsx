@@ -61,7 +61,7 @@ const Chat = () => {
               一度削除すると復元できません
             </p>
             <div className="flex justify-end">
-              <Button onClick={close} className="mr-2" variant='outline' >
+              <Button onClick={close} className="mr-2" variant="outline">
                 キャンセル
               </Button>
               <Button

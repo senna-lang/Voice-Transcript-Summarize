@@ -46,7 +46,7 @@ const Login = () => {
             )
               .then(userCredential => {
                 const unsubscribed = onAuthStateChanged(auth, newUser => {
-                  // setUser(newUser)
+                  setUser(newUser?.email ?? null);
                   setUserId(newUser?.uid ?? null);
                   router.push('/');
                 });
@@ -60,7 +60,7 @@ const Login = () => {
                 } else {
                   alert(error.message);
                 }
-              })
+              });
           })}
         >
           <TextInput

@@ -23,6 +23,7 @@ import ReactLoading from 'react-loading';
 import { HiMiniArrowsPointingOut } from 'react-icons/hi2';
 import { FaRegFileLines } from 'react-icons/fa6';
 import { AiOutlineFileAdd } from 'react-icons/ai';
+import OpenAI from 'openai';
 
 const ffmpeg = createFFmpeg({
   //ffmpegの初期化
@@ -32,6 +33,11 @@ const ffmpeg = createFFmpeg({
 const MAX_FILE_SIZE = 25000000;
 const fileTypes = ['mp4', 'mp3', 'm4a'];
 
+const openAi = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+});
+
 const Sidebar = () => {
   const [userId, setUserId] = useUserIdState();
   const [textId, setTextId] = useRecoilState(textIdState);
@@ -39,7 +45,7 @@ const Sidebar = () => {
   const [modalOpened, setModalOpened] = useState<boolean>(false);
   const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
   const [vanillaText, setVanillaText] = useState<string>('');
-  const [summaryText, setSummaryText] = useState<string>('');
+  const [summaryText, setSummaryText] = useState<string | null>('');
   const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
   const [loading1, setLoading1] = useState<boolean>(false);
@@ -137,15 +143,12 @@ const Sidebar = () => {
 
   const createSummary = async () => {
     const prompt = `「${vanillaText}」この文章を元にアジェンダとサマリーを作成してください`;
-    const body = JSON.stringify({ prompt: prompt });
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    const res = await axios.post('/api/chatgpt', body, {
-      headers: headers,
+    const gptRes = await openAi.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'gpt-3.5-turbo-1106',
+      temperature: 0,
     });
-    const summaryText = res.data;
-    setSummaryText(summaryText.choices[0].message.content);
+    setSummaryText(gptRes.choices[0].message.content);
     setLoading1(false);
   };
 

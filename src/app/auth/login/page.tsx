@@ -36,7 +36,7 @@ const Login = () => {
   return (
     <div className=" h-screen flex flex-col items-center justify-center bg-dark-mode">
       <h1 className=" text-white text-2xl mb-14 font-bold">VTSへログイン</h1>
-      <Box maw={400} className="p-8 w-96 bg-blue-600 rounded-md">
+      <Box maw={400} className="p-8 md:w-96 bg-blue-600 rounded-md">
         <form
           onSubmit={form.onSubmit(async values => {
             await signInWithEmailAndPassword(

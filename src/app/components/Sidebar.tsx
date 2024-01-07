@@ -42,7 +42,7 @@ const Sidebar = () => {
   const [textTitle, setTextTitle] = useRecoilState(textTitleState);
   const [apiKey, setApiKey] = useRecoilState(apiKeyState);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
-  const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
+  const [fsModalOpened, setFsModalOpened] = useState<boolean>(true);
   const [vanillaText, setVanillaText] = useState<string>('');
   const [summaryText, setSummaryText] = useState<string | null>('');
   const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
@@ -101,7 +101,7 @@ const Sidebar = () => {
 
     const formData = new FormData();
     formData.append('file', audio_file);
-    
+
     const whisperText = await transcription(formData);
     const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
     setVanillaText(cleanedText);
@@ -285,8 +285,8 @@ const Sidebar = () => {
         radius={0}
         transitionProps={{ transition: 'fade', duration: 200 }}
       >
-        <div className=" h-[90vh] mx-3 flex">
-          <div className="flex flex-col items-center w-1/2 p-8 bg-slate-100 rounded-lg">
+        <div className=" h-[90vh] mx-3 md:flex">
+          <div className="flex flex-col items-center md:w-1/2 md:mb-0 mb-4 p-8 bg-slate-100 rounded-lg">
             <div className=" w-full h-1/2">
               <h2 className=" font-semibold text-2xl w-full text-center mb-4">
                 Transcript
@@ -304,7 +304,7 @@ const Sidebar = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center justify-center w-1/2 rounded-lg mx-3 p-8 bg-slate-100">
+          <div className="flex flex-col items-center justify-center md:w-1/2 rounded-lg md:mx-3 p-8 bg-slate-100">
             <Stepper active={active} orientation="vertical" size="xl">
               <Stepper.Step
                 label="Transcription"

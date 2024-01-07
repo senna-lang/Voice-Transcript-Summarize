@@ -10,15 +10,15 @@ const Header = () => {
   const isValidKey = !apiKey.startsWith('sk-') && apiKey !== '';
 
   return (
-    <div className=" flex justify-between bg-white py-4 px-8 items-center h-[7vh]">
-      <div className=" w-3/5">
+    <div className=" md:flex md:justify-between bg-white py-4 px-8 items-center md:h-[7vh]">
+      <div className="w-full md:w-3/5">
         <PasswordInput
           placeholder="your OPENAI_API_KEY"
           onChange={e => setApiKey(e.target.value)}
           error={isValidKey ? '無効なkeyです' : null}
         />
       </div>
-      <div>{user == null ? <></> : <p>{user}</p>}</div>
+      <div>{user == null ? <></> : <div>{user}</div>}</div>
     </div>
   );
 };

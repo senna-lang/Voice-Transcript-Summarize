@@ -25,6 +25,7 @@ import { FaRegFileLines } from 'react-icons/fa6';
 import { AiOutlineFileAdd } from 'react-icons/ai';
 import OpenAI from 'openai';
 import { useUserState } from '../atoms/user';
+import { transcription } from '../lib/openai';
 
 const ffmpeg = createFFmpeg({
   //ffmpegの初期化
@@ -100,12 +101,8 @@ const Sidebar = () => {
 
     const formData = new FormData();
     formData.append('file', audio_file);
-
-    const res = await fetch('/api', {
-      method: 'POST',
-      body: formData,
-    });
-    const whisperText = await res.json();
+    
+    const whisperText = await transcription(formData);
     const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
     setVanillaText(cleanedText);
     setLoading1(false);
@@ -159,7 +156,7 @@ const Sidebar = () => {
         nextStep();
         setLoading1(false);
       } catch {
-        window.alert('APIKeyが間違っている可能性があります。')
+        window.alert('APIKeyが間違っている可能性があります。');
         setLoading1(false);
       }
     }

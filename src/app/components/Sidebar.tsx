@@ -42,7 +42,7 @@ const Sidebar = () => {
   const [textTitle, setTextTitle] = useRecoilState(textTitleState);
   const [apiKey, setApiKey] = useRecoilState(apiKeyState);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
-  const [fsModalOpened, setFsModalOpened] = useState<boolean>(true);
+  const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
   const [vanillaText, setVanillaText] = useState<string>('');
   const [summaryText, setSummaryText] = useState<string | null>('');
   const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
@@ -196,7 +196,7 @@ const Sidebar = () => {
         onClick={handleModalOpen}
         className="cursor-pointer flex justify-evenly items-center border border-black my-2 rounded-md shadow-lg text-slate-500 hover:bg-blue-500 hover:shadow-none hover:text-white hover:border-white duration-150"
       >
-        <span className="p-4 text-2xl ">
+        <span className="p-4 text-2xl">
           <AiOutlineFileAdd />
         </span>
         <h1 className="text-xl font-semibold p-4">新規作成</h1>

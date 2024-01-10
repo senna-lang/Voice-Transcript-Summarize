@@ -68,45 +68,52 @@ const Sidebar = () => {
   }, []);
 
   const submitFile = async (file: File) => {
-    setLoading1(true);
-    ffmpeg.FS('writeFile', file.name, await fetchFile(file));
-    await ffmpeg.run(
-      '-i', // 入力ファイルを指定
-      file.name,
-      '-vn', // ビデオストリームを無視し、音声ストリームのみを出力
-      '-ar', // オーディオサンプリング周波数
-      '16000',
-      '-ac', // チャンネル
-      '1',
-      '-b:a', // ビットレート
-      '64k',
-      '-f', // 出力ファイルのフォーマット
-      'mp3',
-      'output.mp3'
-    );
-    const readData = ffmpeg.FS('readFile', 'output.mp3');
-    const audioBlob = new Blob([readData.buffer], { type: 'audio/mp3' });
+    try {
+      setLoading1(true);
+      ffmpeg.FS('writeFile', file.name, await fetchFile(file));
+      await ffmpeg.run(
+        '-i', // 入力ファイルを指定
+        file.name,
+        '-vn', // ビデオストリームを無視し、音声ストリームのみを出力
+        '-ar', // オーディオサンプリング周波数
+        '16000',
+        '-ac', // チャンネル
+        '1',
+        '-b:a', // ビットレート
+        '64k',
+        '-f', // 出力ファイルのフォーマット
+        'mp3',
+        'output.mp3'
+      );
+      const readData = ffmpeg.FS('readFile', 'output.mp3');
+      const audioBlob = new Blob([readData.buffer], { type: 'audio/mp3' });
 
-    // サイズチェック Whisperは最大25MB
-    if (audioBlob.size > MAX_FILE_SIZE) {
-      alert('サイズが大きすぎます');
+      // サイズチェック Whisperは最大25MB
+      if (audioBlob.size > MAX_FILE_SIZE) {
+        alert('サイズが大きすぎます');
+        setLoading1(false);
+        return;
+      }
+
+      const audio_file = new File([audioBlob], 'audio.mp3', {
+        type: audioBlob.type,
+        lastModified: Date.now(),
+      });
+
+      const formData = new FormData();
+      formData.append('file', audio_file);
+
+      const whisperText = await transcription(formData);
+      const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
+      setVanillaText(cleanedText);
+      setFsModalOpened(true);
+    } catch (err) {
+      alert('エラーが発生しました。時間をおいてもう１度お試しください。')
+      console.log('エラーが発生しました', err);
+    } finally {
       setLoading1(false);
-      return;
+      setModalOpened(false);
     }
-
-    const audio_file = new File([audioBlob], 'audio.mp3', {
-      type: audioBlob.type,
-      lastModified: Date.now(),
-    });
-
-    const formData = new FormData();
-    formData.append('file', audio_file);
-
-    const whisperText = await transcription(formData);
-    const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
-    setVanillaText(cleanedText);
-    setLoading1(false);
-    setFsModalOpened(true);
   };
 
   const saveTexts = async () => {
@@ -117,27 +124,32 @@ const Sidebar = () => {
       window.alert('タイトルを入力してください。');
       return;
     }
-    const TextMeta = {
-      name: textTitle,
-      userId,
-      createdAt: serverTimestamp(),
-    };
-    const textData = {
-      summary: summaryText,
-      vanilla: vanillaText,
-    };
-    const newTextRef = collection(db, 'texts');
-    await addDoc(newTextRef, TextMeta);
-    const newTextMeta = await getNewTextMeta(userId);
-    const docRef = doc(db, 'texts', `${newTextMeta?.id}`);
-    const detailTextCollectionRef = collection(docRef, 'text');
-    await addDoc(detailTextCollectionRef, textData);
-    setVanillaText('');
-    setSummaryText('');
-    setTextTitle('');
-    setFsModalOpened(false);
-    setModalOpened(false);
-    metaTrigger();
+    try {
+      const TextMeta = {
+        name: textTitle,
+        userId,
+        createdAt: serverTimestamp(),
+      };
+      const textData = {
+        summary: summaryText,
+        vanilla: vanillaText,
+      };
+      const newTextRef = collection(db, 'texts');
+      await addDoc(newTextRef, TextMeta);
+      const newTextMeta = await getNewTextMeta(userId);
+      const docRef = doc(db, 'texts', `${newTextMeta?.id}`);
+      const detailTextCollectionRef = collection(docRef, 'text');
+      await addDoc(detailTextCollectionRef, textData);
+      setVanillaText('');
+      setSummaryText('');
+      setTextTitle('');
+      setFsModalOpened(false);
+      setModalOpened(false);
+      metaTrigger();
+    } catch (err) {
+      alert('保存に失敗しました。もう１度お試しください。')
+      console.log('エラーが発生しました', err);
+    }
   };
 
   const createSummary = async () => {
@@ -145,35 +157,62 @@ const Sidebar = () => {
       window.alert('openaiのAPIKeyをセットしてください');
       setLoading1(false);
     } else {
-      const prompt = `「${vanillaText}」この文章を元にアジェンダとサマリーを作成してください`;
       try {
+        const prompt = `
+      #命令書 
+      あなたはプロの編集者です。以下の制約条件に従って、入力する文章を元に要約とアジェンダを作成してください。
+       #制約条件
+      ・重要なキーワードを取りこぼさない。
+      ・文章の意味を変更しない。 
+      ・必ずアジェンダとサマリーを作成すること。
+      ・アジェンダは数字の箇条書きで作成すること。
+      ・サマリーは500文字程度の文章にまとめること。
+      ・completion_tokensが1000以上2000以内になるように出力すること。
+       #入力する文章
+       [${vanillaText}] 
+      #出力形式
+       [アジェンダ]:
+       [サマリー]:
+      `;
+
         const gptRes = await openAi.chat.completions.create({
           messages: [{ role: 'user', content: prompt }],
-          model: 'gpt-3.5-turbo-1106',
+          model: 'gpt-3.5-turbo-16k',
           temperature: 0,
         });
         setSummaryText(gptRes.choices[0].message.content);
         nextStep();
-        setLoading1(false);
-      } catch {
-        window.alert('APIKeyが間違っている可能性があります。');
+      } catch(err) {
+        alert('APIKeyが間違っている可能性があります。');
+        console.log('エラーが発生しました',err)
+      } finally {
         setLoading1(false);
       }
     }
   };
 
   const handleLogout = () => {
-    auth.signOut();
-    setUser(null);
-    setApiKey('');
-    setTextTitle('');
-    metaTrigger();
+    try {
+      auth.signOut();
+      setUser(null);
+      setApiKey('');
+      setTextTitle('');
+      metaTrigger();
+    } catch (err) {
+      alert('ログアウトに失敗しました。')
+      console.log('エラーが発生しました。', err);
+    }
   };
 
   const selectText = async (title: string, id: string) => {
-    setTextTitle(title);
-    await setTextId(id);
-    detailTrigger();
+    try{
+      setTextTitle(title);
+      setTextId(id);
+      detailTrigger();
+    }catch(err) {
+      alert('データの取得に失敗しました。もう１度お試しください。')
+      console.log('エラーが発生しました',err)
+    }
   };
 
   const handleModalOpen = () => {

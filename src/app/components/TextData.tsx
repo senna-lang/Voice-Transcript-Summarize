@@ -21,19 +21,25 @@ const Chat = () => {
   const [opened, { open, close }] = useDisclosure(false);
 
   const handleDelete = async (textId: string) => {
-    const docRef = doc(db, 'texts', textId);
-    await deleteDoc(docRef);
-    const subCollectionRef = collection(docRef, 'text');
-    const subDocsQuery = query(subCollectionRef);
-    const subDocsSnapshot = await getDocs(subDocsQuery);
-    subDocsSnapshot.forEach(async subDoc => {
-      const subDocRef = doc(subCollectionRef, subDoc.id);
-      await deleteDoc(subDocRef);
-    });
-    metaTrigger();
-    setTitle('');
-    setTextId('');
-    close;
+    try {
+      const docRef = doc(db, 'texts', textId);
+      await deleteDoc(docRef);
+      const subCollectionRef = collection(docRef, 'text');
+      const subDocsQuery = query(subCollectionRef);
+      const subDocsSnapshot = await getDocs(subDocsQuery);
+      subDocsSnapshot.forEach(async subDoc => {
+        const subDocRef = doc(subCollectionRef, subDoc.id);
+        await deleteDoc(subDocRef);
+      });
+      metaTrigger();
+      setTitle('');
+      setTextId('');
+    } catch (err) {
+      alert('削除に失敗しました。もう１度お試しください。');
+      console.log('エラーが発生しました。', err);
+    } finally {
+      close;
+    }
   };
 
   return (
@@ -84,7 +90,7 @@ const Chat = () => {
                   <h2 className=" font-semibold text-2xl w-full text-center mb-2">
                     Summary
                   </h2>
-                  <div className=" border-dashed border-blue-300 border-2 p-6 rounded-lg">
+                  <div className=" border-dashed border-blue-300 border-2 p-6 rounded-lg leading-relaxed break-words whitespace-pre-wrap">
                     <div>{textDetail.summary}</div>
                   </div>
                 </div>
@@ -92,7 +98,7 @@ const Chat = () => {
                   <h2 className=" font-semibold text-2xl w-full text-center mb-2">
                     Transcript
                   </h2>
-                  <div className="border-dashed border-blue-300 border-2 p-6 rounded-lg">
+                  <div className="border-dashed border-blue-300 border-2 p-6 rounded-lg leading-relaxed break-words whitespace-pre-wrap">
                     <div>{textDetail.vanilla}</div>
                   </div>
                 </div>

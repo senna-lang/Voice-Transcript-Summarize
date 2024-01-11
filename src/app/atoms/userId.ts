@@ -19,5 +19,5 @@ export function useUserIdState() {
     setDidMount(true);
   }, []);
 
-  return [didMount ? userId : null, setUserId];
+  return [didMount ? userId : '', setUserId];
 }

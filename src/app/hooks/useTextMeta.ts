@@ -10,11 +10,13 @@ const fetcher = async (url: string) => {
   return response.data;
 };
 
-export const useTextMeta = (userId: string | null) => {
-  const { data:textMeta, isLoading, error, mutate } = useSWR(
-    userId ? `${url}/${userId}` : null,
-    fetcher
-  );
+export const useTextMeta = (userId: string) => {
+  const {
+    data: textMeta,
+    isLoading,
+    error,
+    mutate,
+  } = useSWR(userId ? `${url}/${userId}` : null, fetcher);
 
   const revalidate = useCallback(() => mutate(), [mutate]);
 

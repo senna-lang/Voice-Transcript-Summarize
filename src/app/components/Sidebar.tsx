@@ -240,7 +240,7 @@ const Sidebar = () => {
   const selectText = async (title: string, id: string) => {
     try {
       setTextTitle(title);
-      await setTextId(id);
+      setTextId(id);
       detailTrigger();
     } catch (err) {
       alert('データの取得に失敗しました。もう１度お試しください。');

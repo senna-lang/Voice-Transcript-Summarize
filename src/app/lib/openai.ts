@@ -1,4 +1,4 @@
-export const transcription = async (formData: any) => {
+export const transcription = async (formData: any,apiKey:string) => {
   try {
     // フォームデータから音声データを取得
     const resource = formData.get('file') as File;
@@ -12,7 +12,7 @@ export const transcription = async (formData: any) => {
     // 文字起こしを実行
     const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       method: 'POST',
       body: transcriptionFormData,

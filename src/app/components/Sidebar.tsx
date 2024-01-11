@@ -7,7 +7,17 @@ import { textTitleState } from '../atoms/textTitle';
 import { auth } from '../lib/firebase';
 import { BiLogOut } from 'react-icons/bi';
 import Link from 'next/link';
-import { Modal, Button, TextInput, Stepper, Group } from '@mantine/core';
+import {
+  Modal,
+  Button,
+  TextInput,
+  Stepper,
+  Group,
+  Combobox,
+  useCombobox,
+  Input,
+  InputBase,
+} from '@mantine/core';
 import { addDoc, collection, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { getNewTextMeta } from '../lib/firestore';
@@ -45,7 +55,7 @@ const Sidebar = () => {
   const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
   const [vanillaText, setVanillaText] = useState<string>('');
   const [summaryText, setSummaryText] = useState<string | null>('');
-  const { textMeta, metaTrigger, isMutating } = useTextMeta(userId);
+  const { textMeta, metaTrigger } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
   const [loading1, setLoading1] = useState<boolean>(false);
   const [loading2, setLoading2] = useState<boolean>(false);
@@ -67,52 +77,71 @@ const Sidebar = () => {
     }
   }, []);
 
+  const groceries = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k'];
+
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+  });
+
+  const [gptModel, setGptModel] = useState<string | null>(null);
+
+  const options = groceries.map(item => (
+    <Combobox.Option value={item} key={item}>
+      {item}
+    </Combobox.Option>
+  ));
+
   const submitFile = async (file: File) => {
-    try {
-      setLoading1(true);
-      ffmpeg.FS('writeFile', file.name, await fetchFile(file));
-      await ffmpeg.run(
-        '-i', // 入力ファイルを指定
-        file.name,
-        '-vn', // ビデオストリームを無視し、音声ストリームのみを出力
-        '-ar', // オーディオサンプリング周波数
-        '16000',
-        '-ac', // チャンネル
-        '1',
-        '-b:a', // ビットレート
-        '64k',
-        '-f', // 出力ファイルのフォーマット
-        'mp3',
-        'output.mp3'
-      );
-      const readData = ffmpeg.FS('readFile', 'output.mp3');
-      const audioBlob = new Blob([readData.buffer], { type: 'audio/mp3' });
-
-      // サイズチェック Whisperは最大25MB
-      if (audioBlob.size > MAX_FILE_SIZE) {
-        alert('サイズが大きすぎます');
-        setLoading1(false);
-        return;
-      }
-
-      const audio_file = new File([audioBlob], 'audio.mp3', {
-        type: audioBlob.type,
-        lastModified: Date.now(),
-      });
-
-      const formData = new FormData();
-      formData.append('file', audio_file);
-
-      const whisperText = await transcription(formData);
-      const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
-      setVanillaText(cleanedText);
-      setFsModalOpened(true);
-    } catch (err) {
-      alert('エラーが発生しました。時間をおいてもう１度お試しください。')
-      console.log('エラーが発生しました', err);
-    } finally {
-      setLoading1(false);
+    if (apiKey == '') {
+      window.alert('openaiのAPIKeyをセットしてください');
       setModalOpened(false);
+    } else {
+      try {
+        setLoading1(true);
+        ffmpeg.FS('writeFile', file.name, await fetchFile(file));
+        await ffmpeg.run(
+          '-i', // 入力ファイルを指定
+          file.name,
+          '-vn', // ビデオストリームを無視し、音声ストリームのみを出力
+          '-ar', // オーディオサンプリング周波数
+          '16000',
+          '-ac', // チャンネル
+          '1',
+          '-b:a', // ビットレート
+          '64k',
+          '-f', // 出力ファイルのフォーマット
+          'mp3',
+          'output.mp3'
+        );
+        const readData = ffmpeg.FS('readFile', 'output.mp3');
+        const audioBlob = new Blob([readData.buffer], { type: 'audio/mp3' });
+
+        // サイズチェック Whisperは最大25MB
+        if (audioBlob.size > MAX_FILE_SIZE) {
+          alert('サイズが大きすぎます');
+          setLoading1(false);
+          return;
+        }
+
+        const audio_file = new File([audioBlob], 'audio.mp3', {
+          type: audioBlob.type,
+          lastModified: Date.now(),
+        });
+
+        const formData = new FormData();
+        formData.append('file', audio_file);
+
+        const whisperText = await transcription(formData, apiKey);
+        const cleanedText = whisperText.replace(/^\s*$[\n\r]{1,}/gm, '');
+        setVanillaText(cleanedText);
+        setFsModalOpened(true);
+      } catch (err) {
+        alert('エラーが発生しました。時間をおいてもう１度お試しください。');
+        console.log('エラーが発生しました', err);
+      } finally {
+        setLoading1(false);
+        setModalOpened(false);
+      }
     }
   };
 
@@ -147,14 +176,17 @@ const Sidebar = () => {
       setModalOpened(false);
       metaTrigger();
     } catch (err) {
-      alert('保存に失敗しました。もう１度お試しください。')
+      alert('保存に失敗しました。もう１度お試しください。');
       console.log('エラーが発生しました', err);
     }
   };
 
-  const createSummary = async () => {
+  const createSummary = async (gptModel: string | null) => {
     if (apiKey == '') {
-      window.alert('openaiのAPIKeyをセットしてください');
+      alert('openaiのAPIKeyをセットしてください');
+      setLoading1(false);
+    } else if (gptModel == null) {
+      alert('ChatGPTのモデルを選択してください。');
       setLoading1(false);
     } else {
       try {
@@ -177,14 +209,14 @@ const Sidebar = () => {
 
         const gptRes = await openAi.chat.completions.create({
           messages: [{ role: 'user', content: prompt }],
-          model: 'gpt-3.5-turbo-16k',
+          model: `${gptModel}`,
           temperature: 0,
         });
         setSummaryText(gptRes.choices[0].message.content);
         nextStep();
-      } catch(err) {
+      } catch (err) {
         alert('APIKeyが間違っている可能性があります。');
-        console.log('エラーが発生しました',err)
+        console.log('エラーが発生しました', err);
       } finally {
         setLoading1(false);
       }
@@ -193,25 +225,26 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     try {
-      auth.signOut();
       setUser(null);
+      setUserId('');
       setApiKey('');
       setTextTitle('');
+      auth.signOut();
       metaTrigger();
     } catch (err) {
-      alert('ログアウトに失敗しました。')
+      alert('ログアウトに失敗しました。');
       console.log('エラーが発生しました。', err);
     }
   };
 
   const selectText = async (title: string, id: string) => {
-    try{
+    try {
       setTextTitle(title);
-      setTextId(id);
+      await setTextId(id);
       detailTrigger();
-    }catch(err) {
-      alert('データの取得に失敗しました。もう１度お試しください。')
-      console.log('エラーが発生しました',err)
+    } catch (err) {
+      alert('データの取得に失敗しました。もう１度お試しください。');
+      console.log('エラーが発生しました', err);
     }
   };
 
@@ -354,7 +387,12 @@ const Sidebar = () => {
                 description="保存か要約を選んでください"
                 loading={loading1}
               >
-                文字起こしのみを保存 or ChatGptに要約してもらう
+                <div>文字起こしのみを保存 or ChatGptに要約してもらう</div>
+                <div>
+                  {vanillaText.length > 3000
+                    ? '文章が長いためgpt-3.5-turbo-16kをおすすめします。'
+                    : '文章が短いためgpt-3.5-turboをおすすめします。'}
+                </div>
               </Stepper.Step>
               <Stepper.Step
                 label="Save All"
@@ -371,13 +409,43 @@ const Sidebar = () => {
                   <Button
                     onClick={() => {
                       setLoading1(true);
-                      createSummary();
+                      createSummary(gptModel);
                     }}
                     className="mb-2"
                     disabled={loading1}
                   >
                     要約してもらう
                   </Button>
+                  <div className=" mb-2">
+                    <Combobox
+                      store={combobox}
+                      onOptionSubmit={val => {
+                        setGptModel(val);
+                        combobox.closeDropdown();
+                      }}
+                    >
+                      <Combobox.Target>
+                        <InputBase
+                          component="button"
+                          type="button"
+                          pointer
+                          rightSection={<Combobox.Chevron />}
+                          rightSectionPointerEvents="none"
+                          onClick={() => combobox.toggleDropdown()}
+                        >
+                          {gptModel || (
+                            <Input.Placeholder>
+                              モデルを選択してください。
+                            </Input.Placeholder>
+                          )}
+                        </InputBase>
+                      </Combobox.Target>
+
+                      <Combobox.Dropdown>
+                        <Combobox.Options>{options}</Combobox.Options>
+                      </Combobox.Dropdown>
+                    </Combobox>
+                  </div>
                   <div className=" flex">
                     <TextInput
                       placeholder="タイトルを入力"
@@ -402,7 +470,7 @@ const Sidebar = () => {
                   <Button
                     onClick={() => {
                       setLoading2(true);
-                      createSummary();
+                      createSummary(gptModel);
                       nextStep();
                       setLoading2(false);
                     }}

@@ -1,9 +1,16 @@
-import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  where,
+  addDoc,
+} from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { TextDetail, TextMeta } from '../types/types';
+import { TextDetail, TextDetailProps, TextMeta, TextMetaProps } from '../types/types';
 import { doc } from 'firebase/firestore';
 
-export const getTextMeta = async (userId: any) => {
+export const getTextMeta = async (userId: string) => {
   const roomCollectionRef = collection(db, 'texts');
   const q = query(
     roomCollectionRef,
@@ -19,7 +26,7 @@ export const getTextMeta = async (userId: any) => {
   }));
   return texts;
 };
-export const getNewTextMeta = async (userId: any) => {
+export const getNewTextMeta = async (userId: string) => {
   const roomCollectionRef = collection(db, 'texts');
   const q = query(
     roomCollectionRef,
@@ -46,4 +53,17 @@ export const getTextDetail = async (id: string) => {
     vanilla: doc.data().vanilla,
   }));
   return detailText;
+};
+
+export const saveText = async (
+  TextMeta: TextMetaProps,
+  textData: TextDetailProps,
+  userId: string,
+) => {
+  const newTextRef = collection(db, 'texts');
+  await addDoc(newTextRef, TextMeta);
+  const newTextMeta = await getNewTextMeta(userId);
+  const docRef = doc(db, 'texts', `${newTextMeta?.id}`);
+  const detailTextCollectionRef = collection(docRef, 'text');
+  await addDoc(detailTextCollectionRef, textData);
 };

@@ -18,9 +18,8 @@ import {
   Input,
   InputBase,
 } from '@mantine/core';
-import { addDoc, collection, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { getNewTextMeta } from '../lib/firestore';
+import { serverTimestamp } from 'firebase/firestore';
+import { saveText } from '../lib/firestore';
 import { useTextMeta } from '../hooks/useTextMeta';
 import { useTextDetail } from '../hooks/useTextDetail';
 import { useUserIdState } from '@/app/atoms/userId';
@@ -33,9 +32,8 @@ import ReactLoading from 'react-loading';
 import { HiMiniArrowsPointingOut } from 'react-icons/hi2';
 import { FaRegFileLines } from 'react-icons/fa6';
 import { AiOutlineFileAdd } from 'react-icons/ai';
-import OpenAI from 'openai';
 import { useUserState } from '../atoms/user';
-import { transcription } from '../lib/openai';
+import { summarize, transcription } from '../lib/openai';
 
 const ffmpeg = createFFmpeg({
   //ffmpegの初期化
@@ -46,36 +44,23 @@ const MAX_FILE_SIZE = 25000000;
 const fileTypes = ['mp4', 'mp3', 'm4a'];
 
 const Sidebar = () => {
+  const [modalOpened, setModalOpened] = useState<boolean>(false);
+  const [gptModel, setGptModel] = useState<string | null>(null);
+  const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
+  const [vanillaText, setVanillaText] = useState<string>('');
+  const [summaryText, setSummaryText] = useState<string | null>('');
+  const [loading1, setLoading1] = useState<boolean>(false);
+  const [loading2, setLoading2] = useState<boolean>(false);
+  const [active, setActive] = useState<number>(1);
   const [userId, setUserId] = useUserIdState();
   const [user, setUser] = useUserState();
   const [textId, setTextId] = useRecoilState(textIdState);
   const [textTitle, setTextTitle] = useRecoilState(textTitleState);
   const [apiKey, setApiKey] = useRecoilState(apiKeyState);
-  const [modalOpened, setModalOpened] = useState<boolean>(false);
-  const [fsModalOpened, setFsModalOpened] = useState<boolean>(false);
-  const [vanillaText, setVanillaText] = useState<string>('');
-  const [summaryText, setSummaryText] = useState<string | null>('');
   const { textMeta, metaTrigger } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
-  const [loading1, setLoading1] = useState<boolean>(false);
-  const [loading2, setLoading2] = useState<boolean>(false);
-  const [active, setActive] = useState(1);
   const nextStep = () =>
     setActive(current => (current < 3 ? current + 1 : current));
-
-  const openAi = new OpenAI({
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true,
-  });
-  useEffect(() => {
-    const load = async () => {
-      await ffmpeg.load();
-    };
-    // Loadチェック
-    if (!ffmpeg.isLoaded()) {
-      load();
-    }
-  }, []);
 
   const groceries = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k'];
 
@@ -83,13 +68,20 @@ const Sidebar = () => {
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
-  const [gptModel, setGptModel] = useState<string | null>(null);
-
   const options = groceries.map(item => (
     <Combobox.Option value={item} key={item}>
       {item}
     </Combobox.Option>
   ));
+  
+  useEffect(() => {
+    const load = async () => {
+      await ffmpeg.load();
+    };
+    if (!ffmpeg.isLoaded()) {
+      load();
+    }
+  }, []);
 
   const submitFile = async (file: File) => {
     if (apiKey == '') {
@@ -154,7 +146,7 @@ const Sidebar = () => {
       return;
     }
     try {
-      const TextMeta = {
+      const textMeta = {
         name: textTitle,
         userId,
         createdAt: serverTimestamp(),
@@ -163,12 +155,7 @@ const Sidebar = () => {
         summary: summaryText,
         vanilla: vanillaText,
       };
-      const newTextRef = collection(db, 'texts');
-      await addDoc(newTextRef, TextMeta);
-      const newTextMeta = await getNewTextMeta(userId);
-      const docRef = doc(db, 'texts', `${newTextMeta?.id}`);
-      const detailTextCollectionRef = collection(docRef, 'text');
-      await addDoc(detailTextCollectionRef, textData);
+      await saveText(textMeta, textData, userId);
       setVanillaText('');
       setSummaryText('');
       setTextTitle('');
@@ -190,29 +177,8 @@ const Sidebar = () => {
       setLoading1(false);
     } else {
       try {
-        const prompt = `
-      #命令書 
-      あなたはプロの編集者です。以下の制約条件に従って、入力する文章を元に要約とアジェンダを作成してください。
-       #制約条件
-      ・重要なキーワードを取りこぼさない。
-      ・文章の意味を変更しない。 
-      ・必ずアジェンダとサマリーを作成すること。
-      ・アジェンダは数字の箇条書きで作成すること。
-      ・サマリーは500文字程度の文章にまとめること。
-      ・completion_tokensが1000以上2000以内になるように出力すること。
-       #入力する文章
-       [${vanillaText}] 
-      #出力形式
-       [アジェンダ]:
-       [サマリー]:
-      `;
-
-        const gptRes = await openAi.chat.completions.create({
-          messages: [{ role: 'user', content: prompt }],
-          model: `${gptModel}`,
-          temperature: 0,
-        });
-        setSummaryText(gptRes.choices[0].message.content);
+        const gptRes = await summarize(apiKey, gptModel, vanillaText);
+        setSummaryText(gptRes);
         nextStep();
       } catch (err) {
         alert('APIKeyが間違っている可能性があります。');

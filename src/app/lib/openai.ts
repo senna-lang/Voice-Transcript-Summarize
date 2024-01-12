@@ -1,4 +1,6 @@
-export const transcription = async (formData: any,apiKey:string) => {
+import OpenAI from 'openai';
+
+export const transcription = async (formData: FormData, apiKey: string) => {
   try {
     // フォームデータから音声データを取得
     const resource = formData.get('file') as File;
@@ -32,4 +34,42 @@ export const transcription = async (formData: any,apiKey:string) => {
   } catch (err) {
     return err;
   }
+};
+
+export const summarize = async (
+  apiKey: string,
+  gptModel: string,
+  vanillaText: string
+) => {
+  const openAi = new OpenAI({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true,
+  });
+
+  const prompt = `
+  #命令書 
+  あなたはプロの編集者です。以下の制約条件に従って、入力する文章を元に要約とアジェンダを作成してください。
+   #制約条件
+  ・重要なキーワードを取りこぼさない。
+  ・文章の意味を変更しない。 
+  ・必ずアジェンダとサマリーを作成すること。
+  ・アジェンダは数字の箇条書きで作成すること。
+  ・サマリーは500文字程度の文章にまとめること。
+  ・completion_tokensが1000以上2000以内になるように出力すること。
+   #入力する文章
+   [${vanillaText}] 
+  #出力形式
+   [アジェンダ]:
+   [サマリー]:
+  `;
+
+  const gptRes = await openAi.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: `${gptModel}`,
+    temperature: 0,
+  });
+
+  const result = gptRes.choices[0].message.content;
+
+  return result;
 };

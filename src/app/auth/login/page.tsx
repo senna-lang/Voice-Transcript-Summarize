@@ -10,13 +10,13 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/app/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { useRecoilState } from 'recoil';
-import { userIdState } from '@/app/atoms/userId';
-import { userState } from '@/app/atoms/user';
+import { useUserIdState } from '@/app/atoms/userId';
+import { useUserState } from '@/app/atoms/user';
+
 
 const Login = () => {
-  const [userId, setUserId] = useRecoilState(userIdState);
-  const [user, setUser] = useRecoilState(userState);
+  const [userId, setUserId] = useUserIdState();
+  const [user, setUser] = useUserState();
 
   const router = useRouter();
   const form = useForm({
@@ -47,7 +47,7 @@ const Login = () => {
               .then(userCredential => {
                 const unsubscribed = onAuthStateChanged(auth, newUser => {
                   setUser(newUser?.email ?? null);
-                  setUserId(newUser?.uid ?? null);
+                  setUserId(newUser?.uid ?? '');
                   router.push('/');
                 });
                 return () => {

@@ -10,6 +10,7 @@ import { db } from '../lib/firebase';
 import { TextDetail, TextDetailProps, TextMeta, TextMetaProps } from '../types/types';
 import { doc } from 'firebase/firestore';
 
+//テキストメタデータの取得
 export const getTextMeta = async (userId: string) => {
   const roomCollectionRef = collection(db, 'texts');
   const q = query(
@@ -26,6 +27,8 @@ export const getTextMeta = async (userId: string) => {
   }));
   return texts;
 };
+
+//新しく作成したドキュメントのテキストメタデータの取得
 export const getNewTextMeta = async (userId: string) => {
   const roomCollectionRef = collection(db, 'texts');
   const q = query(
@@ -44,6 +47,7 @@ export const getNewTextMeta = async (userId: string) => {
   return firstText;
 };
 
+//テキスト内容の取得
 export const getTextDetail = async (id: string) => {
   const docRef = doc(db, 'texts', id);
   const detailTextCollectionRef = collection(docRef, 'text');
@@ -55,6 +59,7 @@ export const getTextDetail = async (id: string) => {
   return detailText;
 };
 
+//新規テキストの保存
 export const saveText = async (
   TextMeta: TextMetaProps,
   textData: TextDetailProps,

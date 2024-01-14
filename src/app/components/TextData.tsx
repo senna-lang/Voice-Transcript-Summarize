@@ -20,6 +20,7 @@ const Chat = () => {
   const { metaTrigger } = useTextMeta(userId);
   const [opened, { open, close }] = useDisclosure(false);
 
+  //テキストデータの削除
   const handleDelete = async (textId: string) => {
     try {
       const docRef = doc(db, 'texts', textId);

@@ -35,8 +35,8 @@ import { AiOutlineFileAdd } from 'react-icons/ai';
 import { useUserState } from '../atoms/user';
 import { summarize, transcription } from '../lib/openai';
 
+//ffmpegの初期化
 const ffmpeg = createFFmpeg({
-  //ffmpegの初期化
   corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
   log: true,
 });
@@ -59,11 +59,13 @@ const Sidebar = () => {
   const [apiKey, setApiKey] = useRecoilState(apiKeyState);
   const { textMeta, metaTrigger } = useTextMeta(userId);
   const { detailTrigger } = useTextDetail(textId);
+  //ステッパーの設定
   const nextStep = () =>
     setActive(current => (current < 3 ? current + 1 : current));
-
+  //GPTモデル
   const groceries = ['gpt-3.5-turbo', 'gpt-3.5-turbo-16k'];
 
+  //モデル選択の設定
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -74,15 +76,18 @@ const Sidebar = () => {
     </Combobox.Option>
   ));
   
+  //ffmpegのロード
   useEffect(() => {
     const load = async () => {
       await ffmpeg.load();
     };
     if (!ffmpeg.isLoaded()) {
+      //ロードチェック
       load();
     }
   }, []);
 
+  //文字起こし実行
   const submitFile = async (file: File) => {
     if (apiKey == '') {
       window.alert('openaiのAPIKeyをセットしてください');
@@ -137,6 +142,7 @@ const Sidebar = () => {
     }
   };
 
+  //生成テキストをFireStoreに保存
   const saveTexts = async () => {
     if (vanillaText == '') {
       window.alert('生成テキストが空です');
@@ -168,6 +174,7 @@ const Sidebar = () => {
     }
   };
 
+  //要約の生成
   const createSummary = async (gptModel: string | null) => {
     if (apiKey == '') {
       alert('openaiのAPIKeyをセットしてください');
@@ -189,6 +196,7 @@ const Sidebar = () => {
     }
   };
 
+    //ログアウト実行
   const handleLogout = () => {
     try {
       setUser(null);
@@ -203,6 +211,7 @@ const Sidebar = () => {
     }
   };
 
+  //テキスト内容取得
   const selectText = async (title: string, id: string) => {
     try {
       setTextTitle(title);
@@ -214,6 +223,7 @@ const Sidebar = () => {
     }
   };
 
+  //文字起こしモーダルの展開
   const handleModalOpen = () => {
     if (userId) {
       setModalOpened(true);

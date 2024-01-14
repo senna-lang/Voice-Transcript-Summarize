@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 
+//文字起こし実行
 export const transcription = async (formData: FormData, apiKey: string) => {
   try {
     // フォームデータから音声データを取得
@@ -36,6 +37,7 @@ export const transcription = async (formData: FormData, apiKey: string) => {
   }
 };
 
+//要約実行
 export const summarize = async (
   apiKey: string,
   gptModel: string,

@@ -21,7 +21,8 @@ const Register = () => {
       password: '',
       APIkey: '',
     },
-
+    
+    //バリデーションチェック
     validate: {
       email: value =>
         /^\S+@\S+$/.test(value) ? null : '無効なメールアドレスです',

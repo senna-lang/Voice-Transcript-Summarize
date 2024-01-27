@@ -1,16 +1,16 @@
-'use client';
-import { useRecoilState } from 'recoil';
-import { userIdState } from '@/app/atoms/userId';
-import { textIdState } from '../atoms/textId';
-import { textTitleState } from '../atoms/textTitle';
-import { TextDetail } from '../types/types';
-import { useTextDetail } from '../hooks/useTextDetail';
-import { Button, Modal } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { collection, deleteDoc, doc, getDocs, query } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { useTextMeta } from '../hooks/useTextMeta';
-import { FaRegTrashAlt } from 'react-icons/fa';
+"use client";
+import { useRecoilState } from "recoil";
+import { userIdState } from "@/app/atoms/userId";
+import { textIdState } from "../atoms/textId";
+import { textTitleState } from "../atoms/textTitle";
+import { TextDetail } from "../types/types";
+import { useTextDetail } from "../hooks/useTextDetail";
+import { Button, Modal } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { collection, deleteDoc, doc, getDocs, query } from "firebase/firestore";
+import { db } from "../lib/firebase";
+import { useTextMeta } from "../hooks/useTextMeta";
+import { FaRegTrashAlt } from "react-icons/fa";
 
 const Chat = () => {
   const [userId] = useRecoilState(userIdState);
@@ -23,36 +23,36 @@ const Chat = () => {
   //テキストデータの削除
   const handleDelete = async (textId: string) => {
     try {
-      const docRef = doc(db, 'texts', textId);
+      const docRef = doc(db, "texts", textId);
       await deleteDoc(docRef);
-      const subCollectionRef = collection(docRef, 'text');
+      const subCollectionRef = collection(docRef, "text");
       const subDocsQuery = query(subCollectionRef);
       const subDocsSnapshot = await getDocs(subDocsQuery);
-      subDocsSnapshot.forEach(async subDoc => {
+      subDocsSnapshot.forEach(async (subDoc) => {
         const subDocRef = doc(subCollectionRef, subDoc.id);
         await deleteDoc(subDocRef);
       });
       metaTrigger();
-      setTitle('');
-      setTextId('');
+      setTitle("");
+      setTextId("");
     } catch (err) {
-      alert('削除に失敗しました。もう１度お試しください。');
-      console.log('エラーが発生しました。', err);
+      alert("削除に失敗しました。もう１度お試しください。");
+      console.log("エラーが発生しました。", err);
     } finally {
       close;
     }
   };
 
   return (
-    <div className="p-6 flex flex-col bg-slate-100 h-[93vh]">
-      <div className=" min-h-full bg-white p-5 rounded-lg overflow-y-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div className="flex h-[93vh] flex-col bg-slate-100 p-6">
+      <div className=" min-h-full overflow-y-auto rounded-lg bg-white p-5">
+        <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-bold ">{userId ? textTitle : <></>}</h1>
-          {textTitle == '' ? (
+          {textTitle == "" ? (
             <></>
           ) : (
             <div
-              className="font-semibold text-xl text-blue-500 inline-block cursor-pointer "
+              className="inline-block cursor-pointer text-xl font-semibold text-blue-500 "
               onClick={open}
             >
               <FaRegTrashAlt />
@@ -61,10 +61,10 @@ const Chat = () => {
         </div>
         <Modal opened={opened} onClose={close} centered withCloseButton={false}>
           <div className="p-4">
-            <h1 className=" w-full text-lg text-left mb-1">
+            <h1 className=" mb-1 w-full text-left text-lg">
               本当に削除してもいいですか？
             </h1>
-            <p className=" text-slate-600  mb-10">
+            <p className=" mb-10  text-slate-600">
               一度削除すると復元できません
             </p>
             <div className="flex justify-end">
@@ -83,23 +83,23 @@ const Chat = () => {
             </div>
           </div>
         </Modal>
-        <div className="flex-grow mb-4">
+        <div className="mb-4 flex-grow">
           {userId && textDetail ? (
             textDetail.map((textDetail: TextDetail) => (
               <div key={textDetail.summary}>
                 <div className="mb-5">
-                  <h2 className=" font-semibold text-2xl w-full text-center mb-2">
+                  <h2 className=" mb-2 w-full text-center text-2xl font-semibold">
                     Summary
                   </h2>
-                  <div className=" border-dashed border-blue-300 border-2 p-6 rounded-lg leading-relaxed break-words whitespace-pre-wrap">
+                  <div className=" whitespace-pre-wrap break-words rounded-lg border-2 border-dashed border-blue-300 p-6 leading-relaxed">
                     <div>{textDetail.summary}</div>
                   </div>
                 </div>
                 <div>
-                  <h2 className=" font-semibold text-2xl w-full text-center mb-2">
+                  <h2 className=" mb-2 w-full text-center text-2xl font-semibold">
                     Transcript
                   </h2>
-                  <div className="border-dashed border-blue-300 border-2 p-6 rounded-lg leading-relaxed break-words whitespace-pre-wrap">
+                  <div className="whitespace-pre-wrap break-words rounded-lg border-2 border-dashed border-blue-300 p-6 leading-relaxed">
                     <div>{textDetail.vanilla}</div>
                   </div>
                 </div>

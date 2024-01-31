@@ -1,6 +1,6 @@
 "use client";
-import Header from "./components/layouts/Header";
-import * as Vts from '@/app/features/VTS/components/index';
+import Header from "../components/layouts/Header";
+import * as Vts from "@/features/VTS/components/index";
 
 export const runtime = "edge";
 
@@ -14,7 +14,7 @@ const Home = () => {
           </div>
           <div className="max-h-screen md:w-3/4">
             <Header />
-            <Vts.TextData/>
+            <Vts.TextData />
           </div>
         </div>
       </div>

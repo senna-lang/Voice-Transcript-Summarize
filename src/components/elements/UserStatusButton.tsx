@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { auth } from "@/app/lib/firebase";
+import { auth } from "@/common/lib/firebase";
 import { useRecoilState } from "recoil";
 import { BiLogOut } from "react-icons/bi";
-import { useUserState } from "@/app/atoms/user";
-import { useUserIdState } from "@/app/atoms/userId";
-import { apiKeyState } from "@/app/atoms/apikey";
-import { textTitleState } from "@/app/atoms/textTitle";
-import { useTextMeta } from "@/app/hooks/useTextMeta";
+import { useUserState } from "@/common/atoms/user";
+import { useUserIdState } from "@/common/atoms/userId";
+import { apiKeyState } from "@/common/atoms/apikey";
+import { textTitleState } from "@/common/atoms/textTitle";
+import { useTextMeta } from "@/common/hooks/useTextMeta";
 
 const UserStatusButton = () => {
   const [user, setUser] = useUserState();

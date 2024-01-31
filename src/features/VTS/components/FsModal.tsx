@@ -13,17 +13,17 @@ import {
 } from "@mantine/core";
 import { serverTimestamp } from "firebase/firestore";
 import { useRecoilState } from "recoil";
-import { useTextMeta } from "@/app/hooks/useTextMeta";
-import { loadingBState } from "@/app/atoms/loadingB";
-import { loadingAState } from "@/app/atoms/loadingA";
-import { fsModalState } from "@/app/atoms/fsModal";
-import { vanillaTextState } from "@/app/atoms/vanillaText";
-import { textTitleState } from "@/app/atoms/textTitle";
-import { useUserIdState } from "@/app/atoms/userId";
-import { fileDropModalState } from "@/app/atoms/fileDropModal";
-import { apiKeyState } from "@/app/atoms/apikey";
-import { saveText } from "@/app/lib/firestore";
-import { summarize } from "@/app/lib/openai";
+import { useTextMeta } from "@/common/hooks/useTextMeta";
+import { loadingBState } from "@/common/atoms/loadingB";
+import { loadingAState } from "@/common/atoms/loadingA";
+import { fsModalState } from "@/common/atoms/fsModal";
+import { vanillaTextState } from "@/common/atoms/vanillaText";
+import { textTitleState } from "@/common/atoms/textTitle";
+import { useUserIdState } from "@/common/atoms/userId";
+import { fileDropModalState } from "@/common/atoms/fileDropModal";
+import { apiKeyState } from "@/common/atoms/apikey";
+import { saveText } from "@/common/lib/firestore";
+import { summarize } from "@/common/lib/openai";
 
 const FsModal = () => {
   const [loadingA, setLoadingA] = useRecoilState(loadingAState);

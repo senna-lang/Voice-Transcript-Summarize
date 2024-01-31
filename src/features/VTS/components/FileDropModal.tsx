@@ -1,16 +1,16 @@
-'use client'
+"use client";
 import { useEffect } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { FaFileAudio } from "react-icons/fa6";
 import ReactLoading from "react-loading";
 import { Modal } from "@mantine/core";
 import { useRecoilState } from "recoil";
-import { fileDropModalState } from "@/app/atoms/fileDropModal";
-import { loadingAState } from "@/app/atoms/loadingA";
-import { apiKeyState } from "@/app/atoms/apikey";
-import { fsModalState } from "@/app/atoms/fsModal";
-import { vanillaTextState } from "@/app/atoms/vanillaText";
-import { transcription } from "@/app/lib/openai";
+import { fileDropModalState } from "@/common/atoms/fileDropModal";
+import { loadingAState } from "@/common/atoms/loadingA";
+import { apiKeyState } from "@/common/atoms/apikey";
+import { fsModalState } from "@/common/atoms/fsModal";
+import { vanillaTextState } from "@/common/atoms/vanillaText";
+import { transcription } from "@/common/lib/openai";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 
 //ffmpegの初期化
@@ -27,18 +27,17 @@ const FileDropModal = () => {
   const [vanillaText, setVanillaText] = useRecoilState(vanillaTextState);
   const [loadingA, setLoadingA] = useRecoilState(loadingAState);
   const [apiKey, setApiKey] = useRecoilState(apiKeyState);
-  
 
   //ffmpegのロード
   useEffect(() => {
-   const load = async () => {
-     await ffmpeg.load();
-   };
-   if (!ffmpeg.isLoaded()) {
-     //ロードチェック
-     load();
-   }
- }, []);
+    const load = async () => {
+      await ffmpeg.load();
+    };
+    if (!ffmpeg.isLoaded()) {
+      //ロードチェック
+      load();
+    }
+  }, []);
 
   const submitFile = async (file: File) => {
     if (apiKey == "") {

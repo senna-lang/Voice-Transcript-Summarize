@@ -1,9 +1,9 @@
-import { getTextDetail } from '@/app/lib/firestore';
-import { NextRequest, NextResponse } from 'next/server';
+import { getTextDetail } from "@/common/lib/firestore";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const textId = params.id;
 

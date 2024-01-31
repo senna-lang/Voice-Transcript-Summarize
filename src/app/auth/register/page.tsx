@@ -3,7 +3,7 @@ import { TextInput, Button, Group, Box, PasswordInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import Link from "next/link";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth } from "@/common/lib/firebase";
 import { useRouter } from "next/navigation";
 
 const Register = () => {

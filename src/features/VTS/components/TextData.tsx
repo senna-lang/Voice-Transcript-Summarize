@@ -2,15 +2,15 @@
 import { Button, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { collection, deleteDoc, doc, getDocs, query } from "firebase/firestore";
-import { db } from "@/app/lib/firebase";
+import { db } from "@/common/lib/firebase";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { TextDetail } from "@/app/types/types";
-import { useTextMeta } from "@/app/hooks/useTextMeta";
-import { useTextDetail } from "@/app/hooks/useTextDetail";
+import { TextDetail } from "@/common/types/types";
+import { useTextMeta } from "@/common/hooks/useTextMeta";
+import { useTextDetail } from "@/common/hooks/useTextDetail";
 import { useRecoilState } from "recoil";
-import { userIdState } from "@/app/atoms/userId";
-import { textIdState } from "@/app/atoms/textId";
-import { textTitleState } from "@/app/atoms/textTitle";
+import { userIdState } from "@/common/atoms/userId";
+import { textIdState } from "@/common/atoms/textId";
+import { textTitleState } from "@/common/atoms/textTitle";
 
 const TextData = () => {
   const [userId] = useRecoilState(userIdState);

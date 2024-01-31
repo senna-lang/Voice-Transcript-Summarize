@@ -7,10 +7,10 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
+import { auth } from "@/common/lib/firebase";
 import { useRouter } from "next/navigation";
-import { useUserIdState } from "@/app/atoms/userId";
-import { useUserState } from "@/app/atoms/user";
+import { useUserIdState } from "@/common/atoms/userId";
+import { useUserState } from "@/common/atoms/user";
 
 const Login = () => {
   const [userId, setUserId] = useUserIdState();

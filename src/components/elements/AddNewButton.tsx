@@ -1,7 +1,7 @@
 import { AiOutlineFileAdd } from "react-icons/ai";
 import { useRecoilState } from "recoil";
-import { fileDropModalState } from "@/app/atoms/fileDropModal";
-import { userIdState } from "@/app/atoms/userId";
+import { fileDropModalState } from "@/common/atoms/fileDropModal";
+import { userIdState } from "@/common/atoms/userId";
 
 const AddNewButton = () => {
   const [modalOpened, setModalOpened] = useRecoilState(fileDropModalState);

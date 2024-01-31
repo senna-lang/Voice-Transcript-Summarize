@@ -1,9 +1,9 @@
-import { getTextMeta } from '@/app/lib/firestore';
-import { NextRequest, NextResponse } from 'next/server';
+import { getTextMeta } from "@/common/lib/firestore";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const userId = params.id;
 

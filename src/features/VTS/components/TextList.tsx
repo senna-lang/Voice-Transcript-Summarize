@@ -1,11 +1,11 @@
-import { useTextDetail } from "@/app/hooks/useTextDetail";
-import { useTextMeta } from "@/app/hooks/useTextMeta";
+import { useTextDetail } from "@/common/hooks/useTextDetail";
+import { useTextMeta } from "@/common/hooks/useTextMeta";
 import { FaRegFileLines } from "react-icons/fa6";
-import { TextMeta } from "@/app/types/types";
+import { TextMeta } from "@/common/types/types";
 import { useRecoilState } from "recoil";
-import { useUserIdState } from "@/app/atoms/userId";
-import { textIdState } from "@/app/atoms/textId";
-import { textTitleState } from "@/app/atoms/textTitle";
+import { useUserIdState } from "@/common/atoms/userId";
+import { textIdState } from "@/common/atoms/textId";
+import { textTitleState } from "@/common/atoms/textTitle";
 
 const TextList = () => {
   const [userId, setUserId] = useUserIdState();

@@ -1,7 +1,7 @@
 import { PasswordInput } from "@mantine/core";
 import { useRecoilState } from "recoil";
-import { useUserState } from "@/app/atoms/user";
-import { apiKeyState } from "@/app/atoms/apikey";
+import { useUserState } from "@/common/atoms/user";
+import { apiKeyState } from "@/common/atoms/apikey";
 
 const Header = () => {
   const [user] = useUserState();

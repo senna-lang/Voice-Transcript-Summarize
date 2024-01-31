@@ -1,6 +1,6 @@
-import AddNewButton from "@/app/components/elements/AddNewButton";
-import UserStatusButton from "@/app/components/elements/UserStatusButton";
-import * as Vts from '@/app/features/VTS/components/index'
+import AddNewButton from "@/components/elements/AddNewButton";
+import UserStatusButton from "@/components/elements/UserStatusButton";
+import * as Vts from "@/features/VTS/components/index";
 import { HiMiniArrowsPointingOut } from "react-icons/hi2";
 
 const Sidebar = () => {

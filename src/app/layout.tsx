@@ -1,5 +1,5 @@
-import "./styles/mantineBase.css";
-import './styles/globals.css';
+import "../common/styles/mantineBase.css";
+import '../common/styles/globals.css';
 import '@mantine/core/styles.css';
 import type { Metadata } from 'next';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';

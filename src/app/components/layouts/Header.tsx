@@ -1,4 +1,3 @@
-import React from "react";
 import { PasswordInput } from "@mantine/core";
 import { useRecoilState } from "recoil";
 import { useUserState } from "@/app/atoms/user";

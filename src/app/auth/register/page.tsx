@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { TextInput, Button, Group, Box, PasswordInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import Link from "next/link";

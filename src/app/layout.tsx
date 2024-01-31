@@ -1,7 +1,7 @@
 import "./styles/mantineBase.css";
-import './globals.css';
-import type { Metadata } from 'next';
+import './styles/globals.css';
 import '@mantine/core/styles.css';
+import type { Metadata } from 'next';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import RecoilProvider from './RecoilProvider';
 

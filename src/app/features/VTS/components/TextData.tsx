@@ -1,22 +1,22 @@
 "use client";
-import { useRecoilState } from "recoil";
-import { userIdState } from "@/app/atoms/userId";
-import { textIdState } from "../atoms/textId";
-import { textTitleState } from "../atoms/textTitle";
-import { TextDetail } from "../types/types";
-import { useTextDetail } from "../hooks/useTextDetail";
 import { Button, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { collection, deleteDoc, doc, getDocs, query } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import { useTextMeta } from "../hooks/useTextMeta";
+import { db } from "@/app/lib/firebase";
 import { FaRegTrashAlt } from "react-icons/fa";
+import { TextDetail } from "@/app/types/types";
+import { useTextMeta } from "@/app/hooks/useTextMeta";
+import { useTextDetail } from "@/app/hooks/useTextDetail";
+import { useRecoilState } from "recoil";
+import { userIdState } from "@/app/atoms/userId";
+import { textIdState } from "@/app/atoms/textId";
+import { textTitleState } from "@/app/atoms/textTitle";
 
-const Chat = () => {
+const TextData = () => {
   const [userId] = useRecoilState(userIdState);
   const [textId, setTextId] = useRecoilState(textIdState);
   const [textTitle, setTitle] = useRecoilState(textTitleState);
-  const { textDetail, isMutating } = useTextDetail(textId);
+  const { textDetail } = useTextDetail(textId);
   const { metaTrigger } = useTextMeta(userId);
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -114,4 +114,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default TextData;

@@ -1,8 +1,7 @@
 "use client";
 import React from "react";
-import Sidebar from "./components/Sidebar";
-import Chat from "./components/TextData";
-import Header from "./components/Header";
+import Header from "./components/layouts/Header";
+import * as Vts from '@/app/features/VTS/components/index';
 
 export const runtime = "edge";
 
@@ -12,11 +11,11 @@ const Home = () => {
       <div className="h-screen items-center justify-center bg-slate-300 md:flex">
         <div className="h-full md:flex xl:w-[1280px]">
           <div className="h-full border-r md:w-1/4">
-            <Sidebar />
+            <Vts.Sidebar />
           </div>
           <div className="max-h-screen md:w-3/4">
             <Header />
-            <Chat />
+            <Vts.TextData/>
           </div>
         </div>
       </div>

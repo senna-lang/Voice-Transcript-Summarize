@@ -1,8 +1,8 @@
 import React from "react";
 import { PasswordInput } from "@mantine/core";
-import { useUserState } from "../atoms/user";
 import { useRecoilState } from "recoil";
-import { apiKeyState } from "../atoms/apikey";
+import { useUserState } from "@/app/atoms/user";
+import { apiKeyState } from "@/app/atoms/apikey";
 
 const Header = () => {
   const [user] = useUserState();
